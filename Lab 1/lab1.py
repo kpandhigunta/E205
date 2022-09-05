@@ -30,7 +30,7 @@ def transformGPS(csv_name):
 transformGPS('lab1_azimuth_00.csv')
 
 
-def newfunc(csv_name):
+def generate_histogram(csv_name):
     arr = np.genfromtxt(csv_name, delimiter=',', skip_header=0, dtype=float)
     arr = arr[1:] # remove nan due to header
     ranges = arr[:, 0]
@@ -80,4 +80,4 @@ def find_x_given_z():
     print(c1, c2, c3, c4)
 
 
-# newfunc('lab1_azimuth_-90.csv')
+# generate_histogram('lab1_azimuth_-90.csv')
