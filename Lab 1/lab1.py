@@ -57,8 +57,8 @@ def generate_histogram(csv_name):
     p = norm.pdf(x, mu, std)
 
     plt.plot(x, p, 'k', linewidth=2)
-    plt.savefig('myfile.png', bbox_inches="tight")
-    # plt.y_axis.set_label_position("Likelihood (AU)")
+
+    plt.savefig(csv_name[:-3]+".png", dpi=300)
     plt.show()
 
 def find_z_given_x(x):
