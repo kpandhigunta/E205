@@ -58,6 +58,7 @@ def newfunc(csv_name):
 
     plt.plot(x, p, 'k', linewidth=2)
 
+    plt.savefig(csv_name[:-3]+".png", dpi=300)
     plt.show()
 
 def find_z_given_x(x):
@@ -82,4 +83,5 @@ def find_x_given_z():
     print(c1, c2, c3, c4)
 
 
-newfunc('lab1_azimuth_90.csv')
+newfunc('lab1_azimuth_00.csv')
+
