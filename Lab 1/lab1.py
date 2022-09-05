@@ -57,13 +57,14 @@ def generate_histogram(csv_name):
     p = norm.pdf(x, mu, std)
 
     plt.plot(x, p, 'k', linewidth=2)
-
+    plt.savefig('myfile.png', bbox_inches="tight")
+    # plt.y_axis.set_label_position("Likelihood (AU)")
     plt.show()
 
 def find_z_given_x(x):
-    mu = 9.272
+    mu = 11 + x
     std = 0.0074950183517010875
-    point = 11 + x
+    point = 9.272
     return norm.pdf(point, mu, std)
 
 def find_x_given_z():
@@ -81,5 +82,5 @@ def find_x_given_z():
 
     print(c1, c2, c3, c4)
 
-
-# generate_histogram('lab1_azimuth_-90.csv')
+generate_histogram('lab1_azimuth_00.csv')
+# find_x_given_z()
