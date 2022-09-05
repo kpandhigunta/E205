@@ -13,21 +13,21 @@ def transformGPS(csv_name):
 
     r_earth = 6371000 # in m
 
-    x = r_earth*(lat - lat_mean)*np.cos(lat_mean)
-    y = r_earth*(long - long_mean)
+    x = r_earth*(long - long_mean)*np.cos(long_mean)
+    y = r_earth*(lat - lat_mean)
 
     # finding covariance of each direction
     print(np.var(x))
     print(np.var(y))
 
-    plt.plot(x, y)
+    plt.plot(x, y, '.')
     plt.xlabel("X (m)")
     plt.ylabel("Y (m)")
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
 
-# transformGPS('lab1_azimuth_00.csv')
+transformGPS('lab1_azimuth_00.csv')
 
 
 def newfunc(csv_name):

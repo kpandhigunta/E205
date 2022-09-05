@@ -85,7 +85,7 @@ for race in ['black', 'white', 'hispanic', 'asian']:
 
 plt.xticks([0, 1, 2, 3, 4], ['0-15', '16-20', '21-25', '26-30', '31+'])
 plt.xlabel('Age Range')
-plt.ylabel('Probability of Victim Age Given ')
+plt.ylabel('Probability of Victim Age Given Race')
 plt.legend()
 
 plt.show()
