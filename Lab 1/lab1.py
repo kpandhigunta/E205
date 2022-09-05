@@ -13,21 +13,21 @@ def transformGPS(csv_name):
 
     r_earth = 6371000 # in m
 
-    x = r_earth*(long - long_mean)*np.cos(long_mean)
-    y = r_earth*(lat - lat_mean)
+    x = r_earth*(lat - lat_mean)*np.cos(lat_mean)
+    y = r_earth*(long - long_mean)
 
     # finding covariance of each direction
     print(np.var(x))
     print(np.var(y))
 
-    plt.plot(x, y, '.')
+    plt.plot(x, y)
     plt.xlabel("X (m)")
     plt.ylabel("Y (m)")
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
 
-transformGPS('lab1_azimuth_00.csv')
+# transformGPS('lab1_azimuth_00.csv')
 
 
 def newfunc(csv_name):
@@ -45,8 +45,9 @@ def newfunc(csv_name):
 
     plt.hist(ranges, bins=bins, ec='k', density=True)
     plt.xlabel("Range (m)")
-    plt.ylabel("Likelihood")
+    plt.ylabel("Histogram Frequency and PDF Likelihood (count)")
     plt.title('Ranges for Azimuth ' + csv_name)
+
 
     plt.xticks(bins, rotation=90)
     mu, std = norm.fit(ranges)
@@ -56,6 +57,7 @@ def newfunc(csv_name):
     p = norm.pdf(x, mu, std)
 
     plt.plot(x, p, 'k', linewidth=2)
+
     plt.show()
 
 def find_z_given_x(x):
@@ -80,4 +82,4 @@ def find_x_given_z():
     print(c1, c2, c3, c4)
 
 
-# newfunc('lab1_azimuth_-90.csv')
+newfunc('lab1_azimuth_90.csv')
