@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+from matplotlib import pyplot as plt
 
 class Incident(object):
 
@@ -74,22 +75,20 @@ print(arr)
 SUM = np.sum(arr)
 print('Total', SUM, '\tomitted', 7701 - SUM)
 
-def sum_race(arr, race):
-    return np.sum(arr[race_index[race],:])
-
-def prob_age(arr, age_bucket):
-    return np.sum(arr[:, age_bucket]) / SUM
-
-prob_arr = np.zeros_like(arr)
-prob_arr = ((arr)/ np.sum(arr, axis=0)).T
-
-# def p_age_given_race(arr):
-#     for race in race_index:
-#         prob_arr[race_index[race], 0] = arr[race_index[race], 0] / sum_race(arr, race)
-# p_age_given_race(arr)
-print(prob_arr)
+num_ppl_each_race = np.sum(arr, axis=1)
+print(num_ppl_each_race)
+num_ppl_each_race = (arr.T / num_ppl_each_race).T
 
 
+for race in ['black', 'white', 'hispanic', 'asian']:
+    plt.plot(num_ppl_each_race[race_index[race]], '.', label=race)
+
+plt.xticks([0, 1, 2, 3, 4], ['0-15', '16-20', '21-25', '26-30', '31+'])
+plt.xlabel('Age Range')
+plt.ylabel('Probability of Victim Age Given ')
+plt.legend()
+
+plt.show()
         
     
     
