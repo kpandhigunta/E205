@@ -83,5 +83,5 @@ def find_x_given_z():
     print(c1, c2, c3, c4)
 
 
-newfunc('lab1_azimuth_00.csv')
+newfunc('lab1_azimuth_-90.csv')
 
