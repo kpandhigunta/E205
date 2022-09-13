@@ -33,11 +33,18 @@ asian = np.array([
 
 
 
+plt.figure()
 plt.pie(black, labels = ['p('+labels[i]+'|black)'+'\n'+str(x)[:5] for i,x in enumerate(black)])
 plt.savefig('black.png', dpi=300)
+
+plt.figure()
 plt.pie(white, labels = ['p('+labels[i]+'|white)'+'\n'+str(x)[:5] for i,x in enumerate(white)])
 plt.savefig('white.png', dpi=300)
+
+plt.figure()
 plt.pie(hispanic, labels = ['p('+labels[i]+'|hispanic)'+'\n'+str(x)[:5] for i,x in enumerate(hispanic)])
 plt.savefig('hispanic.png', dpi=300)
+
+plt.figure()
 plt.pie(asian, labels = ['p('+labels[i]+'|asian)'+'\n'+str(x)[:5] for i,x in enumerate(asian)])
 plt.savefig('asian.png', dpi=300)
