@@ -73,7 +73,7 @@ def correction_step(x_bar_t, z_t, sigma_sq_bar_t, sigma_sq_z):
     x_bar_t         -- the predicted state estimate of time t
     z_t             -- the measured state of time t
     sigma_sq_bar_t  -- the predicted variance of time t
-    sigma_z         -- the variance of sensor measurement
+    sigma_sq_z         -- the variance of sensor measurement
 
 
     Returns:
@@ -82,8 +82,9 @@ def correction_step(x_bar_t, z_t, sigma_sq_bar_t, sigma_sq_z):
     """
 
     """STUDENT CODE START"""
-    x_est_t = None
-    sigma_sq_est_t = None
+    K_t = sigma_sq_bar_t/(sigma_sq_bar_t + sigma_sq_z)
+    sigma_sq_est_t = sigma_sq_bar_t - (K_t*sigma_sq_bar_t)
+    x_est_t = x_bar_t + K_t*(z_t - x_bar_t)
 
     """STUDENT CODE END"""
 
@@ -126,8 +127,8 @@ def plot_yaw(yaw_dict, time_stamps, title=None, xlim=None, ylim=None):
 def main():
     """Run a 1D Kalman Filter on logged yaw data from a BNO055 IMU."""
 
-    filepath = "./"
-    filename = "2020-02-08_08;34;45.csv"
+    filepath = "assets/"
+    filename = "2020-02-08_08_34_45.csv"
     yaw_data = load_data(filepath + filename)
 
     """STUDENT CODE START"""
@@ -137,6 +138,7 @@ def main():
     #  Initialize filter
     yaw_est_t_prev = yaw_data[0]
     var_t_prev = SENSOR_MODEL_VARIANCE
+    yaw_dict = {}
     yaw_dict["measurements"] = yaw_data
     yaw_dict["estimates"] = []
     yaw_dict["plus_2_stddev"] = []
