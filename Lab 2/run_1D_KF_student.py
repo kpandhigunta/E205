@@ -59,8 +59,8 @@ def prediction_step(x_t_prev, sigma_sq_t_prev):
     """
 
     """STUDENT CODE START"""
-    x_bar_t = None
-    sigma_sq_bar_t = None
+    x_bar_t = x_t_prev
+    sigma_sq_bar_t = sigma_sq_t_prev
     """STUDENT CODE END"""
 
     return [x_bar_t, sigma_sq_bar_t]
@@ -132,13 +132,14 @@ def main():
     yaw_data = load_data(filepath + filename)
 
     """STUDENT CODE START"""
-    SENSOR_MODEL_VARIANCE = None
+    yaw_dict = {}
+    SENSOR_MODEL_VARIANCE = np.var(yaw_data)
+    print(SENSOR_MODEL_VARIANCE)
     """STUDENT CODE END"""
 
     #  Initialize filter
     yaw_est_t_prev = yaw_data[0]
     var_t_prev = SENSOR_MODEL_VARIANCE
-    yaw_dict = {}
     yaw_dict["measurements"] = yaw_data
     yaw_dict["estimates"] = []
     yaw_dict["plus_2_stddev"] = []
@@ -179,8 +180,8 @@ def main():
         var_est_t_prev = var_est_t
 
         # Pack data away into yaw dictionary for plotting purpose
-        plus_2_stddev = wrap_to_360(yaw_est_t + 2*sqrt(var_est_t))
-        minus_2_stddev = wrap_to_360(yaw_est_t - 2*sqrt(var_est_t))
+        plus_2_stddev = wrap_to_360(yaw_est_t + 2*np.sqrt(var_est_t))
+        minus_2_stddev = wrap_to_360(yaw_est_t - 2*np.sqrt(var_est_t))
 
         yaw_dict["estimates"].append(yaw_est_t)
         yaw_dict["plus_2_stddev"].append(plus_2_stddev)
