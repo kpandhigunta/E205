@@ -7,6 +7,7 @@ Description:
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 def load_excel(filename):
     """
@@ -16,9 +17,13 @@ def load_excel(filename):
     arr = np.array(data)
     return arr
 
-def speed_hist(data):
+def getstationaryspeed(data):
+    """
+    calculate 
+    """
     X4 = data[:,13]
     Y4 = data[:,14]
+    dt = 0.5
 
     def getPrevNext(vec):
         # first 12 values are NaNs
@@ -27,27 +32,24 @@ def speed_hist(data):
     prevX4, nextX4 = getPrevNext(X4)
     prevY4, nextY4 = getPrevNext(Y4)
     dist = np.sqrt(np.square(nextX4-prevX4)+np.square(nextY4-prevY4))
-    print('dist', dist)
-    dt = 0.5
     s = dist/dt
-    plt.hist(s)
+    return s
+
+def plothistspeed(speeddata):
+    n, bins, patches = plt.hist(speeddata)
+    mu, sigma = norm.fit(speeddata)
+    y = norm.pdf( bins, mu, sigma)
+    plt.plot(bins, y, '--', linewidth=2)
     plt.show()
+    return sigma
 
-
-    
-
-    # for x, i in enumerate(X4):
-    #     localx = X_ego[i]
-    #     localy = Y_ego[i]
-    #     y = Y4[i]
-    #     t = time[i]
-    #     if x4 != NaN:
-    #         distance = np.sqrt(x-)
-    return 0
-
+def problem3():
+    excel_data = load_excel("assets/E205_Lab2_NuScenesData.xlsx")
+    stationary_data = getstationaryspeed(excel_data)
+    sigma = plothistspeed(stationary_data)
+    print(sigma)
 
 if __name__=='__main__':
-    excel_data = load_excel("assets/E205_Lab2_NuScenesData.xlsx")
-    print(speed_hist(excel_data))
+    problem3()
 
     
