@@ -20,24 +20,44 @@ def printUnarmedLabels(suppress=False):
 def printRaces(suppress=False):
     return printData('victims_race', suppress)
 
+def makeCounter(data_list, init_val):
+    counter = dict()
+    for item in data_list:
+        if type(init_val) is not int:
+            counter[item] = init_val.copy()
+        else:
+            counter[item] = init_val
+    return counter
+
 def makeRaceCounter():
     races = printRaces(suppress=True)
-    
+    return makeCounter(races, 0)
 
+def makeRaceUnarmedCounter():
+    unarmed = printUnarmedLabels(suppress=True)
+    raceCounter = makeRaceCounter()
+    return makeCounter(unarmed, raceCounter)
 
-def countUnarmed(incident_list):
-    
-    unarmed_counter = {
-        '':0,
-        'Vehicle':0,
-        'Allegedly Armed':0,
-        'Unclear':0,
-        'Unarmed':0
-    }
-    for inc in incident_list:
-        label = inc.unarmed
-        unarmed_counter[label] += 1
-    return unarmed_counter
+def countRaceAndUnarmed(incident_list):
+    counter = makeRaceUnarmedCounter()
+    for Inc in incident_list:
+        counter[Inc.unarmed][Inc.victims_race] += 1
+    return counter
+
+def printRaceAndUnarmed():
+    results = countRaceAndUnarmed(INCIDENT_LIST)
+    for armedstatus in results.keys():
+        print(f'{armedstatus}', end='')
+        if armedstatus == '': print('\'\'', end='')
+        print(':')
+        for race in results[armedstatus].keys():
+            if race == '':
+                print('    %-18s %s' %('\'\'', results[armedstatus][race]))
+            else:
+                print('    %-18s %s' %(race, results[armedstatus][race]))
+        print()
+    return
+
 
 def predictVictim(race, was_armed):
     """
@@ -61,8 +81,8 @@ if __name__=='__main__':
     P_HISPANIC = 0.187  # Group: Hispanic or Latino
     TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
 
-    printRaces()
-    printUnarmedLabels()
+    printRaceAndUnarmed()
+
     
 
 
