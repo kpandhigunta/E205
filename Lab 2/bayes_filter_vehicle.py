@@ -112,6 +112,7 @@ def bayes_filter(time, speed):
         bel_x_t_bar = prediction_step(bel_x_t_1)
         bel_x_t = correction_step(z_t, bel_x_t_bar)
         bel_x_t_arr.append(bel_x_t[0])
+        bel_x_t_1 = bel_x_t
     plt.plot(np.arange(time, time+0.5*len(bel_x_t_arr), 0.5), bel_x_t_arr)
     
 

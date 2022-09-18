@@ -128,12 +128,12 @@ def main():
     """Run a 1D Kalman Filter on logged yaw data from a BNO055 IMU."""
 
     filepath = "assets/"
-    filename = "2020-02-08_08_34_45.csv"
+    filename = "2020-02-08_08_52_01.csv"
     yaw_data = load_data(filepath + filename)
 
     """STUDENT CODE START"""
     yaw_dict = {}
-    SENSOR_MODEL_VARIANCE = np.var(yaw_data)
+    SENSOR_MODEL_VARIANCE = 1.9255 # np.var(yaw_data) on stationary
     print(SENSOR_MODEL_VARIANCE)
     """STUDENT CODE END"""
 

@@ -153,6 +153,9 @@ def bayesCorrect():
             countRaceAndAge()
     )
 
+def predictionStep():
+    bel_white = p_white_unarmed*p
+    return [bel_white, bel_black, bel_hispanic, bel_asian]
 
 def printPartDProb():
     prob = probFirstGivenSecond(
