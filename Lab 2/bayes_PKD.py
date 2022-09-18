@@ -105,13 +105,28 @@ def printProb():
         print('%-80s %s' %(prob_string, prob[status][race]))
     return
 
-def predictProb():
+def printSpecificProb():
     """
     Assumes query races are only White, Black, Hispanic, Asian
     """
-    # Case 1 = {"prob_armed":0.8, "prob_unclear":0.2}
+    def printSpecificProb(status):
+        for race in raceQueries():
+            probRaceStatus = probRaceGivenUnarmed()
+            summands = [
+                0.8 * probRaceStatus[status][race],
+                0.2 * probRaceStatus['Unclear'][race]
+            ]
+            prob = sum(summands)
+            print('%-30s %s' %(f'p(race={race.lower()} | pwkby=true)', prob))
+        print('\n')
 
-    # Case 2 = {"prob_unarmed":0.8, "prob_unarmed":0.2}
+    print('Case 1') # where {"prob_armed":0.8, "prob_unclear":0.2}
+    printSpecificProb('Allegedly Armed')
+    
+    print('Case 2') # where {"prob_unarmed":0.8, "prob_unclear":0.2}
+    printSpecificProb('Unarmed')
+    
+
 
 
 
@@ -128,6 +143,7 @@ if __name__=='__main__':
     TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
 
     ### Part (b) ###
-    printProb()
+    #printProb()
 
     ### Part (c) ###
+    printSpecificProb()
