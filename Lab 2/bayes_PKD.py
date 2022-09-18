@@ -74,13 +74,14 @@ def printCounter(counter):
     return
 
 def probFirstGivenSecond(counter):
-    counter = countRaceAndUnarmed()
     prob = dict()
     for first in counter.keys():
         for second in counter[first].keys():
             if first not in prob: prob[first] = dict()
             totalcounter = [counter[first][second] for second in counter[first]]
-            prob[first][second] = counter[first][second] / sum(totalcounter)
+            if sum(totalcounter) == 0: prob[first][second] = 0
+            else:
+                prob[first][second] = counter[first][second] / sum(totalcounter)
     return prob
 
 def raceQueries():
@@ -96,7 +97,7 @@ def getQuery():
             query_list.append((race, status))
     return query_list
 
-def printProb():
+def printPartBProb():
     prob = probFirstGivenSecond(
         countRaceAndUnarmed()
     )
@@ -122,30 +123,44 @@ def printProb():
         print('%-80s %s' %(prob_string, prob[status][race]))
     return
 
-def printSpecificProb():
+def printSpecificProb(status):
+    probRaceGivenKilled = dict()
+    for race in raceQueries():
+        probRaceStatus = probFirstGivenSecond(
+            countRaceAndUnarmed()
+        )
+        summands = [
+            0.8 * probRaceStatus[status][race],
+            0.2 * probRaceStatus['Unclear'][race]
+        ]
+        prob = sum(summands)
+        print('%-30s %s' %(f'p(race={race.lower()} | pwkby=true)', prob))
+        probRaceGivenKilled[race] = prob
+    return probRaceGivenKilled
+
+def printPartCProb():
     """
     Assumes query races are only White, Black, Hispanic, Asian
     """
-    def printSpecificProb(status):
-        for race in raceQueries():
-            probRaceStatus = probFirstGivenSecond(
-                countRaceAndUnarmed()
-            )
-            summands = [
-                0.8 * probRaceStatus[status][race],
-                0.2 * probRaceStatus['Unclear'][race]
-            ]
-            prob = sum(summands)
-            print('%-30s %s' %(f'p(race={race.lower()} | pwkby=true)', prob))
-        print('\n')
-
     print('Case 1') # where {"prob_armed":0.8, "prob_unclear":0.2}
     printSpecificProb('Allegedly Armed')
     
-    print('Case 2') # where {"prob_unarmed":0.8, "prob_unclear":0.2}
+    print('\nCase 2') # where {"prob_unarmed":0.8, "prob_unclear":0.2}
     printSpecificProb('Unarmed')
-    
 
+def bayesCorrect():
+    prob = probFirstGivenSecond(
+            countRaceAndAge()
+    )
+
+
+def printPartDProb():
+    prob = probFirstGivenSecond(
+            countRaceAndAge()
+    )
+    for race in raceQueries():
+        print('%-60s %s' %(f'p(age<20 | person_was_killed_by_police=true, race={race.lower()})',
+            prob[race]['<20']))
 
 
 
@@ -162,10 +177,10 @@ if __name__=='__main__':
     TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
 
     ### Part (b) ###
-    printProb()
+    printPartBProb()
 
     ### Part (c) ###
-    printSpecificProb()
+    printPartCProb()
 
     ### 
-    printCounter(countRaceAndAge())
+    printPartDProb()
