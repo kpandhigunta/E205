@@ -198,8 +198,7 @@ if __name__=='__main__':
     print('Start...\n')
     INCIDENT_LIST = open_PKDv2.readPKD('assets/police_killings.csv')
     print('Incident Total: ', len(INCIDENT_LIST))
-
-    ### Part (a) ###
+    
     # U.S. Census race data: https://www.census.gov/library/visualizations/interactive/race-and-ethnicity-in-the-united-state-2010-and-2020-census.html
     printBanner("a")
     partA = [
