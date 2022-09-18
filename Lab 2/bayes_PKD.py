@@ -29,14 +29,17 @@ def makeCounter(data_list, init_val):
             counter[item] = init_val
     return counter
 
-def makeRaceCounter():
+def makeRaceCounter(init_value):
     races = printRaces(suppress=True)
-    return makeCounter(races, 0)
+    return makeCounter(races, init_value)
 
 def makeRaceUnarmedCounter():
     unarmed = printUnarmedLabels(suppress=True)
-    raceCounter = makeRaceCounter()
+    raceCounter = makeRaceCounter(0)
     return makeCounter(unarmed, raceCounter)
+
+#def makeRaceAgeCounter():
+    #
 
 def countRaceAndUnarmed(incident_list):
     counter = makeRaceUnarmedCounter()
