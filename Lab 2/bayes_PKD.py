@@ -38,8 +38,10 @@ def makeRaceUnarmedCounter():
     raceCounter = makeRaceCounter(0)
     return makeCounter(unarmed, raceCounter)
 
-#def makeRaceAgeCounter():
-    #
+def makeRaceAgeCounter():
+    ages = ['<20', '>=20']
+    age_counter = makeCounter(ages, 0)
+    return makeRaceCounter(age_counter)
 
 def countRaceAndUnarmed(incident_list):
     counter = makeRaceUnarmedCounter()
@@ -150,4 +152,4 @@ if __name__=='__main__':
     ### Part (c) ###
     #printSpecificProb()
 
-    printCounter( countRaceAndUnarmed(INCIDENT_LIST))
+    print( makeRaceAgeCounter())
