@@ -97,7 +97,16 @@ def getQuery():
             query_list.append((race, status))
     return query_list
 
+def printBanner(label):
+    print(
+        '\n===========\n',
+        ' Part ', label,
+        '\n===========\n'
+    )
+    return
+
 def printPartBProb():
+    printBanner('B')
     prob = probFirstGivenSecond(
         countRaceAndUnarmed()
     )
@@ -124,47 +133,68 @@ def printPartBProb():
     return
 
 def printProbRaceGivenKilled(status, suppress=False):
-    probRaceGivenKilled = dict()
+    prob_race_given_killed = dict()
     for race in raceQueries():
-        probRaceStatus = probFirstGivenSecond(
+        prob_race_status = probFirstGivenSecond(
             countRaceAndUnarmed()
         )
         summands = [
-            0.8 * probRaceStatus[status][race],
-            0.2 * probRaceStatus['Unclear'][race]
+            0.8 * prob_race_status[status][race],
+            0.2 * prob_race_status['Unclear'][race]
         ]
         prob = sum(summands)
         if not suppress:
             print('%-30s %s' %(f'p(race={race.lower()} | pwkby=true)', prob))
-        probRaceGivenKilled[race] = prob
-    return probRaceGivenKilled
+        prob_race_given_killed[race] = prob
+    return prob_race_given_killed
 
 def printPartCProb():
     """
     Assumes query races are only White, Black, Hispanic, Asian
     """
+    printBanner('C')
+    
     print('Case 1') # where {"prob_armed":0.8, "prob_unclear":0.2}
     printProbRaceGivenKilled('Allegedly Armed')
     
     print('\nCase 2') # where {"prob_unarmed":0.8, "prob_unclear":0.2}
     printProbRaceGivenKilled('Unarmed')
 
-def bayesCorrect():
-    probAgeGivenRace = probFirstGivenSecond(
-            countRaceAndAge()
-    )
-    return
+
 
 
 
 def printPartDProb():
-    prob = probFirstGivenSecond(
+    printBanner('D')
+    p_age_given_race = probFirstGivenSecond(
             countRaceAndAge()
     )
     for race in raceQueries():
         print('%-60s %s' %(f'p(age<20 | person_was_killed_by_police=true, race={race.lower()})',
-            prob[race]['<20']))
+            p_age_given_race[race]['<20']))
 
+    def printNorms(prob_dict):
+        for race in raceQueries():
+            print('%-60s %s' %(f'p(race={race.lower()} | person_was_killed_by_police=true, age<20)', prob_dict[race]))
+
+
+    def printProbRaceGivenAge(status, suppress=False):
+        p_race_killed = printProbRaceGivenKilled(status, suppress=True)
+        probs = dict()
+        for race in raceQueries():
+            probs[race]= p_age_given_race[race]['<20'] * p_race_killed[race]
+        norm_probs =  { race : probs[race] / sum(probs.values()) for race in probs}
+        if not suppress:
+            printNorms(norm_probs)
+        return norm_probs
+    
+    print('\nCase 1')
+    printProbRaceGivenAge('Allegedly Armed')
+
+    print('\nCase 2')
+    printProbRaceGivenAge('Unclear')
+    return
+    
 
 
 if __name__=='__main__':
