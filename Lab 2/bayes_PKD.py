@@ -123,7 +123,7 @@ def printPartBProb():
         print('%-80s %s' %(prob_string, prob[status][race]))
     return
 
-def printProbRaceGivenKilled(status):
+def printProbRaceGivenKilled(status, suppress=False):
     probRaceGivenKilled = dict()
     for race in raceQueries():
         probRaceStatus = probFirstGivenSecond(
@@ -134,7 +134,8 @@ def printProbRaceGivenKilled(status):
             0.2 * probRaceStatus['Unclear'][race]
         ]
         prob = sum(summands)
-        print('%-30s %s' %(f'p(race={race.lower()} | pwkby=true)', prob))
+        if not suppress:
+            print('%-30s %s' %(f'p(race={race.lower()} | pwkby=true)', prob))
         probRaceGivenKilled[race] = prob
     return probRaceGivenKilled
 
@@ -149,12 +150,12 @@ def printPartCProb():
     printProbRaceGivenKilled('Unarmed')
 
 def bayesCorrect():
-    prob = probFirstGivenSecond(
+    probAgeGivenRace = probFirstGivenSecond(
             countRaceAndAge()
     )
+    return
 
 
-eturn [bel_white, bel_black, bel_hispanic, bel_asian]
 
 def printPartDProb():
     prob = probFirstGivenSecond(
