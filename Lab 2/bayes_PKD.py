@@ -43,10 +43,21 @@ def makeRaceAgeCounter():
     age_counter = makeCounter(ages, 0)
     return makeRaceCounter(age_counter)
 
-def countRaceAndUnarmed(incident_list):
+def countRaceAndUnarmed():
     counter = makeRaceUnarmedCounter()
-    for Inc in incident_list:
+    for Inc in INCIDENT_LIST:
         counter[Inc.unarmed][Inc.victims_race] += 1
+    return counter
+
+def countRaceAndAge():
+    counter = makeRaceAgeCounter()
+    for Inc in INCIDENT_LIST:
+        # filter out '40s' or 'Unknown
+        if not Inc.victims_age.isnumeric(): continue
+        if int(Inc.victims_age) < 20:
+            counter[Inc.victims_race]['<20'] += 1
+        else:
+            counter[Inc.victims_race]['>=20'] += 1
     return counter
 
 def printCounter(counter):
@@ -63,7 +74,7 @@ def printCounter(counter):
     return
 
 def probRaceGivenUnarmed():
-    results = countRaceAndUnarmed(INCIDENT_LIST)
+    results = countRaceAndUnarmed()
     prob = dict()
     for status in results.keys():
         for race in results[status].keys():
@@ -147,9 +158,9 @@ if __name__=='__main__':
     TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
 
     ### Part (b) ###
-    #printProb()
+    printProb()
 
     ### Part (c) ###
-    #printSpecificProb()
+    printSpecificProb()
 
-    print( makeRaceAgeCounter())
+    printCounter( countRaceAndAge())
