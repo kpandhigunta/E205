@@ -46,34 +46,80 @@ def countRaceAndUnarmed(incident_list):
 
 def printRaceAndUnarmed():
     results = countRaceAndUnarmed(INCIDENT_LIST)
-    for armedstatus in results.keys():
-        print(f'{armedstatus}', end='')
-        if armedstatus == '': print('\'\'', end='')
+    for status in results.keys():
+        print(f'{status}', end='')
+        if status == '': print('\'\'', end='')
         print(':')
-        for race in results[armedstatus].keys():
+        for race in results[status].keys():
             if race == '':
-                print('    %-18s %s' %('\'\'', results[armedstatus][race]))
+                print('    %-18s %s' %('\'\'', results[status][race]))
             else:
-                print('    %-18s %s' %(race, results[armedstatus][race]))
+                print('    %-18s %s' %(race, results[status][race]))
         print()
     return
 
+def probRaceGivenUnarmed():
+    results = countRaceAndUnarmed(INCIDENT_LIST)
+    prob = dict()
+    for status in results.keys():
+        for race in results[status].keys():
+            if status not in prob: prob[status] = dict()
+            totalcounter = [results[status][race] for race in results[status]]
+            prob[status][race] = results[status][race] / sum(totalcounter)
+    return prob
 
-def predictVictim(race, was_armed):
-    """
-    Calculates p(race=race | person_was_killed_by_police=true, victim_was_armed=was_armed)
-    
-    race is a string, see printRaces()
-    was_armed is a string: true, false, or unclear
-    """
+def raceQueries():
+    return ("White", "Black", "Hispanic", "Asian")
 
+def statusQueries():
+    return ("Allegedly Armed", "Unarmed", "Unclear")
+
+def getQuery():
+    query_list = []
+    for race in raceQueries():
+        for status in statusQueries():
+            query_list.append((race, status))
+    return query_list
+
+def printProb():
+    prob = probRaceGivenUnarmed()
+    queries = getQuery()
+
+    def makeProbString(race, status):
+        statusBool = {
+            'Allegedly Armed':'true',
+            'Unarmed':'false',
+            'Unclear':'unclear'
+        }
+        parts = ['p(race=',
+                 race.lower(),
+                 ' | person_was_killed_by_police=true, ', 
+                 'victim_was_armed=',
+                 statusBool[status],
+                 ')'
+        ]
+        return ''.join(parts)
+
+    for race, status in queries:
+        prob_string = makeProbString(race, status)
+        print('%-80s %s' %(prob_string, prob[status][race]))
     return
 
+def predictProb():
+    """
+    Assumes query races are only White, Black, Hispanic, Asian
+    """
+    # Case 1 = {"prob_armed":0.8, "prob_unclear":0.2}
+
+    # Case 2 = {"prob_unarmed":0.8, "prob_unarmed":0.2}
+
+
+
 if __name__=='__main__':
-    INCIDENT_LIST = open_PKD.readPKD('assets/police_killings.csv')
+    INCIDENT_LIST = open_PKDv2.readPKD('assets/police_killings.csv')
     INCIDENT_TOTAL = len(INCIDENT_LIST)
 
-    # Part (a)
+    ### Part (a) ###
     # U.S. Census race data: https://www.census.gov/library/visualizations/interactive/race-and-ethnicity-in-the-united-state-2010-and-2020-census.html
     P_WHITE = 0.616     # Group: White alone
     P_ASIAN = 0.06      # Group: Asian alone
@@ -81,4 +127,7 @@ if __name__=='__main__':
     P_HISPANIC = 0.187  # Group: Hispanic or Latino
     TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
 
-    printRaceAndUnarmed()
+    ### Part (b) ###
+    printProb()
+
+    ### Part (c) ###
