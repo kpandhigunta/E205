@@ -44,17 +44,16 @@ def countRaceAndUnarmed(incident_list):
         counter[Inc.unarmed][Inc.victims_race] += 1
     return counter
 
-def printRaceAndUnarmed():
-    results = countRaceAndUnarmed(INCIDENT_LIST)
-    for status in results.keys():
-        print(f'{status}', end='')
-        if status == '': print('\'\'', end='')
+def printCounter(counter):
+    for first in counter.keys():
+        print(f'{first}', end='')
+        if first == '': print('\'\'', end='')
         print(':')
-        for race in results[status].keys():
-            if race == '':
-                print('    %-18s %s' %('\'\'', results[status][race]))
+        for second in counter[first].keys():
+            if second == '':
+                print('    %-18s %s' %('\'\'', counter[first][second]))
             else:
-                print('    %-18s %s' %(race, results[status][race]))
+                print('    %-18s %s' %(second, counter[first][second]))
         print()
     return
 
@@ -146,4 +145,6 @@ if __name__=='__main__':
     #printProb()
 
     ### Part (c) ###
-    printSpecificProb()
+    #printSpecificProb()
+
+    printCounter( countRaceAndUnarmed(INCIDENT_LIST))
