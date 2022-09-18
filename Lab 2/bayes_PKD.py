@@ -4,7 +4,7 @@ Email: sywu@g.hmc.edu
 Date of Creation: Sep 17, 2022
 """
 
-import open_PKD # Access Police Killing Dataset, modified from Lab 1 
+import open_PKDv2 # Access Police Killing Dataset, modified from Lab 1 
 
 def printData(param, suppress=False):
     data = set()
@@ -82,8 +82,3 @@ if __name__=='__main__':
     TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
 
     printRaceAndUnarmed()
-
-    
-
-
-
