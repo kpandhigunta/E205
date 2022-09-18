@@ -73,14 +73,14 @@ def printCounter(counter):
         print()
     return
 
-def probRaceGivenUnarmed():
-    results = countRaceAndUnarmed()
+def probRaceGivenUnarmed(counter):
+    counter = countRaceAndUnarmed()
     prob = dict()
-    for status in results.keys():
-        for race in results[status].keys():
+    for status in counter.keys():
+        for race in counter[status].keys():
             if status not in prob: prob[status] = dict()
-            totalcounter = [results[status][race] for race in results[status]]
-            prob[status][race] = results[status][race] / sum(totalcounter)
+            totalcounter = [counter[status][race] for race in counter[status]]
+            prob[status][race] = counter[status][race] / sum(totalcounter)
     return prob
 
 def raceQueries():
@@ -97,7 +97,9 @@ def getQuery():
     return query_list
 
 def printProb():
-    prob = probRaceGivenUnarmed()
+    prob = probRaceGivenUnarmed(
+        countRaceAndUnarmed()
+    )
     queries = getQuery()
 
     def makeProbString(race, status):
@@ -126,7 +128,9 @@ def printSpecificProb():
     """
     def printSpecificProb(status):
         for race in raceQueries():
-            probRaceStatus = probRaceGivenUnarmed()
+            probRaceStatus = probRaceGivenUnarmed(
+                countRaceAndUnarmed()
+            )
             summands = [
                 0.8 * probRaceStatus[status][race],
                 0.2 * probRaceStatus['Unclear'][race]
@@ -163,4 +167,5 @@ if __name__=='__main__':
     ### Part (c) ###
     printSpecificProb()
 
-    printCounter( countRaceAndAge())
+    ### 
+    printCounter(countRaceAndAge())
