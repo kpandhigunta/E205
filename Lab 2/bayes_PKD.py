@@ -106,7 +106,7 @@ def printBanner(label):
     return
 
 def printPartBProb():
-    printBanner('B')
+    printBanner('b')
     prob = probFirstGivenSecond(
         countRaceAndUnarmed()
     )
@@ -152,7 +152,7 @@ def printPartCProb():
     """
     Assumes query races are only White, Black, Hispanic, Asian
     """
-    printBanner('C')
+    printBanner('c')
     
     print('Case 1') # where {"prob_armed":0.8, "prob_unclear":0.2}
     printProbRaceGivenKilled('Allegedly Armed')
@@ -161,11 +161,8 @@ def printPartCProb():
     printProbRaceGivenKilled('Unarmed')
 
 
-
-
-
 def printPartDProb():
-    printBanner('D')
+    printBanner('d')
     p_age_given_race = probFirstGivenSecond(
             countRaceAndAge()
     )
@@ -198,22 +195,22 @@ def printPartDProb():
 
 
 if __name__=='__main__':
+    print('Start...\n')
     INCIDENT_LIST = open_PKDv2.readPKD('assets/police_killings.csv')
-    INCIDENT_TOTAL = len(INCIDENT_LIST)
+    print('Incident Total: ', len(INCIDENT_LIST))
 
     ### Part (a) ###
     # U.S. Census race data: https://www.census.gov/library/visualizations/interactive/race-and-ethnicity-in-the-united-state-2010-and-2020-census.html
-    P_WHITE = 0.616     # Group: White alone
-    P_ASIAN = 0.06      # Group: Asian alone
-    P_BLACK = 0.124     # Group: Black or African American alone
-    P_HISPANIC = 0.187  # Group: Hispanic or Latino
-    TOTAL_P_RACE = P_WHITE + P_ASIAN + P_BLACK + P_HISPANIC # = 0.987
-
-    ### Part (b) ###
+    printBanner("a")
+    partA = [
+    'p(white)       0.616     Census Group: White alone',
+    'p(black)       0.124     Census Group: Black or African American alone',
+    'p(hispanic)    0.187     Census Group: Hispanic or Latino',
+    'p(asian)       0.06      Census Group: Asian alone',
+    '\nTOTAL: p(white) + p(black) + p(hispanic) + p(asian) = 0.987'
+    ]
+    print('\n'.join(partA))
     printPartBProb()
-
-    ### Part (c) ###
     printPartCProb()
-
-    ### 
     printPartDProb()
+    print('\nFin.')
