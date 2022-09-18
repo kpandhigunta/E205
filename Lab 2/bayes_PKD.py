@@ -123,7 +123,7 @@ def printPartBProb():
         print('%-80s %s' %(prob_string, prob[status][race]))
     return
 
-def printSpecificProb(status):
+def printProbRaceGivenKilled(status):
     probRaceGivenKilled = dict()
     for race in raceQueries():
         probRaceStatus = probFirstGivenSecond(
@@ -143,19 +143,18 @@ def printPartCProb():
     Assumes query races are only White, Black, Hispanic, Asian
     """
     print('Case 1') # where {"prob_armed":0.8, "prob_unclear":0.2}
-    printSpecificProb('Allegedly Armed')
+    printProbRaceGivenKilled('Allegedly Armed')
     
     print('\nCase 2') # where {"prob_unarmed":0.8, "prob_unclear":0.2}
-    printSpecificProb('Unarmed')
+    printProbRaceGivenKilled('Unarmed')
 
 def bayesCorrect():
     prob = probFirstGivenSecond(
             countRaceAndAge()
     )
 
-def predictionStep():
-    bel_white = p_white_unarmed*p
-    return [bel_white, bel_black, bel_hispanic, bel_asian]
+
+eturn [bel_white, bel_black, bel_hispanic, bel_asian]
 
 def printPartDProb():
     prob = probFirstGivenSecond(
