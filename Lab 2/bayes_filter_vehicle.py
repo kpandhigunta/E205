@@ -41,8 +41,8 @@ def plothistspeed(speeddata, scaling):
     
     plt.xlabel('speed s [m/s]')
     plt.ylabel('likelihood [a.u.]')
-    plt.xlim((0, 19.5))
-    plt.title('P(s_4|x_4)')
+    # plt.xlim((0, 19.5))
+    plt.title('P(s_i|x_i=not stopped) for vehicles 2, 3, 5')
     
     
     plt.show()
@@ -66,8 +66,8 @@ def problem3():
     speed6 = getspeed(excel_data[:,19], excel_data[:,20])
 
     speeds = np.concatenate((speed2, speed3, speed5))
-    #mustop, sigmastop = plothistspeed(speed4, 2)
-    #munot, sigmamove = plothistspeed(speeds, 375)
+    mustop, sigmastop = plothistspeed(speed4, 2)
+    munot, sigmamove = plothistspeed(speeds, 375)
 
     plt.figure(figsize=(14,9))
     for i in range(1,7):
