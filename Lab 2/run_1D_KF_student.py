@@ -8,10 +8,10 @@ Description:
 """
 
 import csv
-import time
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import norm
 
 
 def load_data(filename):
@@ -42,6 +42,19 @@ def load_data(filename):
     f.close()
 
     yaw_data = data["Yaw(degrees)"]
+
+    n, bins, patches = plt.hist(yaw_data, density=True)
+    mu, sigma = norm.fit(yaw_data)
+    y = norm.pdf(bins, mu, sigma)
+    plt.plot(bins, y, '--', linewidth=2)
+    
+    plt.xlabel('Yaw [degrees]')
+    plt.ylabel('likelihood [a.u.]')
+    plt.title('Yaw data modeled as normal distribution for stationary bot')
+    print('stationary variance: ' + str(np.var(yaw_data)))
+    print('stationary mu: ' + str(mu))
+    
+    plt.show()
 
     return yaw_data
 
@@ -128,13 +141,12 @@ def main():
     """Run a 1D Kalman Filter on logged yaw data from a BNO055 IMU."""
 
     filepath = "assets/"
-    filename = "2020-02-08_08_52_01.csv"
+    filename = "2020-02-08_08_22_47.csv"
     yaw_data = load_data(filepath + filename)
 
     """STUDENT CODE START"""
     yaw_dict = {}
     SENSOR_MODEL_VARIANCE = 1.9255 # np.var(yaw_data) on stationary
-    print(SENSOR_MODEL_VARIANCE)
     """STUDENT CODE END"""
 
     #  Initialize filter
