@@ -179,8 +179,8 @@ def printPartDProb():
         p_race_killed = printProbRaceGivenKilled(status, suppress=True)
         probs = dict()
         for race in raceQueries():
-            probs[race]= p_age_given_race[race]['<20'] * p_race_killed[race]
-        norm_probs =  { race : probs[race] / sum(probs.values()) for race in probs}
+            probs[race]= p_age_given_race[race]['<20'] * p_race_killed[race] # bayes rule
+        norm_probs =  { race : probs[race] / sum(probs.values()) for race in probs} # normalization
         if not suppress:
             printNorms(norm_probs)
         return norm_probs
