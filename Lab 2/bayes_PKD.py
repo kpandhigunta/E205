@@ -213,3 +213,5 @@ if __name__=='__main__':
     printPartCProb()
     printPartDProb()
     print('\nFin.')
+
+    printCounter(countRaceAndAge())
