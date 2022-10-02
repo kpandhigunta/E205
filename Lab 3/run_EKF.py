@@ -22,6 +22,7 @@ DT = 0.1
 X_LANDMARK = 5.  # meters
 Y_LANDMARK = -5.  # meters
 EARTH_RADIUS = 6.3781E6  # meters
+CCW = -1
 
 def load_data(filename):
     """Load data from the csv log
@@ -190,13 +191,18 @@ def calc_prop_jacobian_x(x_t_prev, u_t):
     """STUDENT CODE START"""
     a_x_prime = u_t[0]
     a_y_prime = u_t[1]
-    theta_t = wrap_to_pi(x_t_prev[4])
+    theta_t_prev = wrap_to_pi(x_t_prev[4])
     G_x_t = np.empty((5, 5))  # add shape of matrix
-    G_x_t[0] = np.array([1, 0, DT, 0, 1/2 * DT**2 * ((a_x_prime * np.cos(theta_t)) - (a_y_prime * np.sin(theta_t)))])
-    G_x_t[1] = np.array([0, 1, 0, DT, 1/2 * DT**2 * (-1*(a_x_prime * np.sin(theta_t)) + (a_y_prime * np.cos(theta_t)))])
-    G_x_t[2] = np.array([1, 0, 0, 0, 0])
-    G_x_t[3] = np.array([0, 1, 0, 0, 0])
+    G_x_t[0] = np.array([1, 0, DT, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT * DT])
+    G_x_t[1] = np.array([0, 1, 0, DT, a_x_prime * np.cos(theta_t_prev) * DT * DT])
+    G_x_t[2] = np.array([1, 0, 0, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT])
+    G_x_t[3] = np.array([0, 1, 0, 0, a_x_prime * np.cos(theta_t_prev) * DT])
     G_x_t[4] = np.array([0, 0, 0, 0, 1])
+    # G_x_t[0] = np.array([1, 0, DT, 0, 1/2 * DT**2 * ((a_x_prime * np.cos(theta_t)) - (a_y_prime * np.sin(theta_t)))])
+    # G_x_t[1] = np.array([0, 1, 0, DT, 1/2 * DT**2 * (-1*(a_x_prime * np.sin(theta_t)) + (a_y_prime * np.cos(theta_t)))])
+    # G_x_t[2] = np.array([1, 0, 0, 0, 0])
+    # G_x_t[3] = np.array([0, 1, 0, 0, 0])
+    # G_x_t[4] = np.array([0, 0, 0, 0, 1])
     """STUDENT CODE END"""
 
     return G_x_t
@@ -215,12 +221,17 @@ def calc_prop_jacobian_u(x_t_prev, u_t):
 
     """STUDENT CODE START"""
     G_u_t = np.zeros((5, 3))  # add shape of matrix
-    theta_t = wrap_to_pi(x_t_prev[4])
-    G_u_t[0] = np.array([1/2 * DT**2 * np.sin(theta_t), 1/2 * DT**2 * np.cos(theta_t), 0])
-    G_u_t[1] = np.array([1/2 * DT**2 * np.cos(theta_t), 1/2 * DT**2 * np.sin(theta_t), 0])
-    G_u_t[2] = np.array([DT * np.sin(theta_t), DT * np.cos(theta_t), 0])
-    G_u_t[3] = np.array([DT * np.cos(theta_t), DT * np.sin(theta_t), 0])
-    G_u_t[3] = np.array([0, 0, DT])
+    theta_t_prev = wrap_to_pi(x_t_prev[4])
+    G_u_t[0] = np.array([DT * DT * np.cos(theta_t_prev), 0, 0])
+    G_u_t[1] = np.array([0, DT * DT * np.sin(theta_t_prev), 0])
+    G_u_t[2] = np.array([DT * np.cos(theta_t_prev), 0, 0])
+    G_u_t[3] = np.array([0, DT * np.sin(theta_t_prev), 0])
+    G_u_t[3] = np.array([0, 0, CCW * DT])
+    # G_u_t[0] = np.array([1/2 * DT**2 * np.sin(theta_t), 1/2 * DT**2 * np.cos(theta_t), 0])
+    # G_u_t[1] = np.array([1/2 * DT**2 * np.cos(theta_t), 1/2 * DT**2 * np.sin(theta_t), 0])
+    # G_u_t[2] = np.array([DT * np.sin(theta_t), DT * np.cos(theta_t), 0])
+    # G_u_t[3] = np.array([DT * np.cos(theta_t), DT * np.sin(theta_t), 0])
+    # G_u_t[3] = np.array([0, 0, DT])
     """STUDENT CODE END"""
 
     return G_u_t
@@ -311,7 +322,6 @@ def calc_meas_prediction(x_bar_t):
     """STUDENT CODE START"""
     H_t = calc_meas_jacobian(x_bar_t)
     xytheta_states = H_t @ x_bar_t
-    
     z_bar_t = xytheta_states
 
     # theta_t = getYaw(x_bar_t)
@@ -342,11 +352,11 @@ def correction_step(x_bar_t, z_t, sigma_x_bar_t):
 
     """STUDENT CODE START"""
     H_t = calc_meas_jacobian(x_bar_t)
-    K_t = calc_kalman_gain(sigma_x_bar_t,H_t)
+    K_t = calc_kalman_gain(sigma_x_bar_t, H_t)
     z_bar_t = calc_meas_prediction(x_bar_t)
     x_est_t = x_bar_t + K_t @ (z_t - z_bar_t)
     I = np.identity(5)
-    sigma_x_est_t = (I - K_t @ H_t) @ sigma_x_bar_t
+    sigma_x_est_t = (I - (K_t @ H_t)) @ sigma_x_bar_t
     """STUDENT CODE END"""
 
     return [x_est_t, sigma_x_est_t]
@@ -356,8 +366,8 @@ def main():
     """Run a EKF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
 
     filepath = "../../lab3csv/"
-    filename = '2020_2_26__16_59_7_filtered'
-    # filename = '2020_2_26__17_21_59'
+    #filename = '2020_2_26__16_59_7_filtered'
+    filename = '2020_2_26__17_21_59_filtered'
     data, is_filtered = load_data(filepath + filename)
 
     # Save filtered data so don't have to process unfiltered data everytime
@@ -388,7 +398,8 @@ def main():
                                      lon_gps[0],
                                      lat_origin,
                                      lon_origin)
-    vx_init, vy_init, theta_init = 0, 0, 0
+    print('first state', x_gps, y_gps)
+    vx_init, vy_init, theta_init = 0, 0, np.radians(0)
     state_est_t_prev = np.array([x_gps, y_gps, vx_init, vy_init, theta_init])
     var_est_t_prev = np.identity(N)
 
@@ -397,15 +408,16 @@ def main():
     gps_estimates = np.empty((2, len(time_stamps)))
     """STUDENT CODE END"""
 
+
+
     #  Run filter over data
     for t, _ in enumerate(time_stamps):
         # Get control input
         """STUDENT CODE START"""
         theta_t_prev = wrap_to_pi(getYaw(state_est_t_prev))
-        transform_yaw_lidar = wrap_to_pi(np.radians(-1 * yaw_lidar[t]))
-        dTheta = wrap_to_pi(transform_yaw_lidar - theta_t_prev)
+        transform_yaw_lidar = wrap_to_pi(np.radians(yaw_lidar[t]))
+        dTheta = wrap_to_pi(CCW * transform_yaw_lidar - theta_t_prev)
         omega = dTheta / DT
-        if t == 0: omega = 0
         u_t = np.array([x_ddot[t], y_ddot[t], omega])
         """STUDENT CODE END"""
 
@@ -415,13 +427,9 @@ def main():
         # Get measurement
         """STUDENT CODE START"""
         theta_t = wrap_to_pi(getYaw(state_pred_t))
-        gps_estimates[:, t] = convert_gps_to_xy(lat_gps[t],
-                                                lon_gps[t],
-                                                lat_origin,
-                                                lon_origin)
         z_t = np.array([ 5 - (y_lidar[t] * np.cos(theta_t) + x_lidar[t] * np.sin(theta_t)),
                         -5 - (y_lidar[t] * np.sin(theta_t) + x_lidar[t] * np.cos(theta_t)),
-                        transform_yaw_lidar])
+                        CCW * transform_yaw_lidar])
         """STUDENT CODE END"""
 
         # Correction Step
@@ -444,10 +452,12 @@ def main():
         gps_estimates[:, t] = np.array([x_gps, y_gps])
 
     """STUDENT CODE START"""
-    xStates = state_estimates[0,:]
-    yStates = state_estimates[1,:]
-    plt.plot(xStates, yStates)
-    #plt.scatter(gps_estimates[0], gps_estimates[1], c = np.arange(sample_size))
+    xStates = state_estimates[0]
+    yStates = state_estimates[1]
+    # plt.scatter(xStates[0], yStates[0])
+    # plt.scatter(gps_estimates[0][0], gps_estimates[1][0])
+    plt.scatter(xStates, yStates, c=np.arange(len(xStates)), cmap="gist_rainbow")
+    plt.scatter(gps_estimates[0], gps_estimates[1], c = np.arange(gps_estimates.shape[1]))
 
     plt.show()
     """STUDENT CODE END"""
@@ -472,10 +482,12 @@ def visual():
     x_ddot = data["AccelX"]
     y_ddot = data["AccelY"]
 
-    plt.plot(x_lidar, label='x')
-    plt.plot(y_lidar, label='y')
-    plt.plot(np.radians(yaw_lidar)-np.pi)
-    plt.legend()
+    # plt.plot(x_lidar, label='x')
+    # plt.plot(y_lidar, label='y')
+    # plt.plot(np.radians(yaw_lidar)-np.pi)
+    plt.plot(yaw_lidar)
+    # plt.plot(y_ddot)
+    # plt.legend()
     plt.show()
 
 if __name__ == "__main__":
