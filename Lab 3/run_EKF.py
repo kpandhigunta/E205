@@ -1,6 +1,6 @@
 """
-Author: Andrew Q. Pham
-Email: apham@g.hmc.edu
+Authors: Sean Wu, Kaanthi Pandhigunta, Andrew Q. Pham (template)
+Email: sywu@g.hmc.edu, kpandhigunta@g.hmc.edu, apham@g.hmc.edu
 Date of Creation: 2/26/20
 Description:
     Extended Kalman Filter implementation to filtering localization estimate
@@ -171,6 +171,10 @@ def propogate_state(x_t_prev, u_t):
 
     return x_bar_t
 
+def getX(x_t): return x_t[0]
+def getY(x_t): return x_t[1]
+def getXdot(x_t): return x_t[2]
+def getYdot(x_t): return x_t[3]
 def getYaw(x_t): return x_t[4]
 
 def calc_prop_jacobian_x(x_t_prev, u_t):
@@ -186,7 +190,7 @@ def calc_prop_jacobian_x(x_t_prev, u_t):
     """STUDENT CODE START"""
     a_x_prime = u_t[0]
     a_y_prime = u_t[1]
-    theta_t = x_t_prev[4]
+    theta_t = wrap_to_pi(x_t_prev[4])
     G_x_t = np.empty((5, 5))  # add shape of matrix
     G_x_t[0] = np.array([1, 0, DT, 0, 1/2 * DT**2 * ((a_x_prime * np.cos(theta_t)) - (a_y_prime * np.sin(theta_t)))])
     G_x_t[1] = np.array([0, 1, 0, DT, 1/2 * DT**2 * (-1*(a_x_prime * np.sin(theta_t)) + (a_y_prime * np.cos(theta_t)))])
@@ -211,12 +215,12 @@ def calc_prop_jacobian_u(x_t_prev, u_t):
 
     """STUDENT CODE START"""
     G_u_t = np.zeros((5, 3))  # add shape of matrix
-    theta_t = x_t_prev[4]
+    theta_t = wrap_to_pi(x_t_prev[4])
     G_u_t[0] = np.array([1/2 * DT**2 * np.sin(theta_t), 1/2 * DT**2 * np.cos(theta_t), 0])
     G_u_t[1] = np.array([1/2 * DT**2 * np.cos(theta_t), 1/2 * DT**2 * np.sin(theta_t), 0])
     G_u_t[2] = np.array([DT * np.sin(theta_t), DT * np.cos(theta_t), 0])
     G_u_t[3] = np.array([DT * np.cos(theta_t), DT * np.sin(theta_t), 0])
-    G_u_t[3] = np.array([0, 0, -1*DT])
+    G_u_t[3] = np.array([0, 0, DT])
     """STUDENT CODE END"""
 
     return G_u_t
@@ -237,10 +241,11 @@ def prediction_step(x_t_prev, u_t, sigma_x_t_prev):
 
     """STUDENT CODE START"""
     # Covariance matrix of control input
-    sigma_u_t = np.zeros((,))  # add shape of matrix
-
-    x_bar_t = 
-    sigma_x_bar_t =
+    sigma_u_t = np.identity(3)  # add shape of matrix
+    G_x_t = calc_prop_jacobian_x(x_t_prev, u_t)
+    G_u_t = calc_prop_jacobian_u(x_t_prev, u_t)
+    x_bar_t = G_x_t @ x_t_prev + G_u_t @ u_t
+    sigma_x_bar_t = G_x_t @ sigma_x_t_prev @ G_x_t.T + G_u_t @ sigma_u_t @ G_u_t.T
     """STUDENT CODE END"""
 
     return [x_bar_t, sigma_x_bar_t]
@@ -253,19 +258,21 @@ def calc_meas_jacobian(x_bar_t):
     x_bar_t (np.array)  -- the predicted state
 
     Returns:
-    H_t (np.array)      -- Jacobian of measurment model
+    H_t (np.array)      -- Jacobian of measurement model
     """
     """STUDENT CODE START"""
-    xlidar = x_bar_t[0]
-    ylidar = x_bar_t[1]
-    theta = x_bar_t[2]
-
     H_t = np.zeros((3, 5))
-    H_t[:,4] = np.array([
-        ylidar * np.sin(theta) - xlidar * np.cos(theta),
-        -1 * ylidar * np.sin(theta) - ylidar * np.cos(theta),
-        1
-    ]).T
+    for i,j in [(0,0), (1,1), (2,4)]:
+        H_t[i,j] = 1
+
+    # xlidar = x_bar_t[0]
+    # ylidar = x_bar_t[1]
+    # theta = x_bar_t[2]
+    # H_t[:,4] = np.array([
+    #     ylidar * np.sin(theta) - xlidar * np.cos(theta),
+    #     -1 * ylidar * np.sin(theta) - ylidar * np.cos(theta),
+    #     1
+    # ]).T
     """STUDENT CODE END"""
 
     return H_t
@@ -283,9 +290,9 @@ def calc_kalman_gain(sigma_x_bar_t, H_t):
     """
     """STUDENT CODE START"""
     # Covariance matrix of measurments
-    sigma_z_t = np.empty((, ))
-
-    K_t =
+    sigma_z_t = np.identity(3)
+    inverse = np.linalg.inv(H_t @ sigma_x_bar_t @ H_t.T + sigma_z_t)
+    K_t = sigma_x_bar_t @ H_t.T @ inverse
     """STUDENT CODE END"""
 
     return K_t
@@ -302,7 +309,19 @@ def calc_meas_prediction(x_bar_t):
     """
 
     """STUDENT CODE START"""
-    z_bar_t = np.array([, ])
+    H_t = calc_meas_jacobian(x_bar_t)
+    xytheta_states = H_t @ x_bar_t
+    
+    z_bar_t = xytheta_states
+
+    # theta_t = getYaw(x_bar_t)
+    # lidarTransform = np.array([
+    #     -1*np.sin(theta_t), -1*np.cos(theta_t), 0,
+    #     np.cos(theta_t), -1*np.sin(theta_t), 0,
+    #     0, 0, 1]).reshape((3,3))
+    # inverse = np.linalg.inv(lidarTransform)
+    # constants = np.array([5, -5, 0])
+    # z_bar_t = inverse @ (xytheta_states.T - constants.T)
     """STUDENT CODE END"""
 
     return z_bar_t
@@ -322,8 +341,12 @@ def correction_step(x_bar_t, z_t, sigma_x_bar_t):
     """
 
     """STUDENT CODE START"""
-    x_est_t =
-    sigma_x_est_t =
+    H_t = calc_meas_jacobian(x_bar_t)
+    K_t = calc_kalman_gain(sigma_x_bar_t,H_t)
+    z_bar_t = calc_meas_prediction(x_bar_t)
+    x_est_t = x_bar_t + K_t @ (z_t - z_bar_t)
+    I = np.identity(5)
+    sigma_x_est_t = (I - K_t @ H_t) @ sigma_x_bar_t
     """STUDENT CODE END"""
 
     return [x_est_t, sigma_x_est_t]
@@ -333,13 +356,13 @@ def main():
     """Run a EKF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
 
     filepath = "../../lab3csv/"
-    filename = '2020_2_26__16_59_7.csv'
-    # filename = '2020_2_26__17_21_59.csv'
+    filename = '2020_2_26__16_59_7_filtered'
+    # filename = '2020_2_26__17_21_59'
     data, is_filtered = load_data(filepath + filename)
 
     # Save filtered data so don't have to process unfiltered data everytime
     if not is_filtered:
-        data = filter_data(data)
+        f_data = filter_data(data)
         save_data(f_data, filepath+filename+"_filtered.csv")
 
     # Load data into variables
@@ -361,7 +384,12 @@ def main():
     #  Initialize filter
     """STUDENT CODE START"""
     N =  5 # number of states
-    state_est_t_prev = np.array([, ])
+    x_gps, y_gps = convert_gps_to_xy(lat_gps[0],
+                                     lon_gps[0],
+                                     lat_origin,
+                                     lon_origin)
+    vx_init, vy_init, theta_init = 0, 0, 0
+    state_est_t_prev = np.array([x_gps, y_gps, vx_init, vy_init, theta_init])
     var_est_t_prev = np.identity(N)
 
     state_estimates = np.empty((N, len(time_stamps)))
@@ -373,7 +401,12 @@ def main():
     for t, _ in enumerate(time_stamps):
         # Get control input
         """STUDENT CODE START"""
-        u_t = np.array([, ])
+        theta_t_prev = wrap_to_pi(getYaw(state_est_t_prev))
+        transform_yaw_lidar = wrap_to_pi(np.radians(-1 * yaw_lidar[t]))
+        dTheta = wrap_to_pi(transform_yaw_lidar - theta_t_prev)
+        omega = dTheta / DT
+        if t == 0: omega = 0
+        u_t = np.array([x_ddot[t], y_ddot[t], omega])
         """STUDENT CODE END"""
 
         # Prediction Step
@@ -381,7 +414,14 @@ def main():
 
         # Get measurement
         """STUDENT CODE START"""
-        z_t = np.array([, ])
+        theta_t = wrap_to_pi(getYaw(state_pred_t))
+        gps_estimates[:, t] = convert_gps_to_xy(lat_gps[t],
+                                                lon_gps[t],
+                                                lat_origin,
+                                                lon_origin)
+        z_t = np.array([ 5 - (y_lidar[t] * np.cos(theta_t) + x_lidar[t] * np.sin(theta_t)),
+                        -5 - (y_lidar[t] * np.sin(theta_t) + x_lidar[t] * np.cos(theta_t)),
+                        transform_yaw_lidar])
         """STUDENT CODE END"""
 
         # Correction Step
@@ -404,10 +444,39 @@ def main():
         gps_estimates[:, t] = np.array([x_gps, y_gps])
 
     """STUDENT CODE START"""
-    # Plot or print results here
+    xStates = state_estimates[0,:]
+    yStates = state_estimates[1,:]
+    plt.plot(xStates, yStates)
+    #plt.scatter(gps_estimates[0], gps_estimates[1], c = np.arange(sample_size))
+
+    plt.show()
     """STUDENT CODE END"""
     return 0
 
+def visual():
+    filepath = "../../lab3csv/"
+    filename = '2020_2_26__16_59_7_filtered'
+    # filename = '2020_2_26__17_21_59'
+    data, is_filtered = load_data(filepath + filename)
+
+    # Load data into variables
+    x_lidar = data["X"]
+    y_lidar = data["Y"]
+    z_lidar = data["Z"]
+    time_stamps = data["Time Stamp"]
+    lat_gps = data["Latitude"]
+    lon_gps = data["Longitude"]
+    yaw_lidar = data["Yaw"]
+    pitch_lidar = data["Pitch"]
+    roll_lidar = data["Roll"]
+    x_ddot = data["AccelX"]
+    y_ddot = data["AccelY"]
+
+    plt.plot(x_lidar, label='x')
+    plt.plot(y_lidar, label='y')
+    plt.plot(np.radians(yaw_lidar)-np.pi)
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
     main()
