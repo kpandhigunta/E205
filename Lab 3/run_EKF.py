@@ -22,7 +22,7 @@ DT = 0.1
 X_LANDMARK = 5.  # meters
 Y_LANDMARK = -5.  # meters
 EARTH_RADIUS = 6.3781E6  # meters
-CCW = 1
+CCW = -1.0
 
 def load_data(filename):
     """Load data from the csv log
@@ -190,14 +190,16 @@ def calc_prop_jacobian_x(x_t_prev, u_t):
     """
     """STUDENT CODE START"""
     a_x_prime = u_t[0]
-    a_y_prime = u_t[1]
     theta_t_prev = wrap_to_pi(x_t_prev[4])
+
     G_x_t = np.empty((5, 5))  # add shape of matrix
     G_x_t[0] = np.array([1, 0, DT, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT * DT])
     G_x_t[1] = np.array([0, 1, 0, DT, a_x_prime * np.cos(theta_t_prev) * DT * DT])
     G_x_t[2] = np.array([1, 0, 0, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT])
     G_x_t[3] = np.array([0, 1, 0, 0, a_x_prime * np.cos(theta_t_prev) * DT])
     G_x_t[4] = np.array([0, 0, 0, 0, 1])
+    
+    theta_t = theta_t_prev
     # G_x_t[0] = np.array([1, 0, DT, 0, 1/2 * DT**2 * ((a_x_prime * np.cos(theta_t)) - (a_y_prime * np.sin(theta_t)))])
     # G_x_t[1] = np.array([0, 1, 0, DT, 1/2 * DT**2 * (-1*(a_x_prime * np.sin(theta_t)) + (a_y_prime * np.cos(theta_t)))])
     # G_x_t[2] = np.array([1, 0, 0, 0, 0])
@@ -223,10 +225,12 @@ def calc_prop_jacobian_u(x_t_prev, u_t):
     G_u_t = np.zeros((5, 3))  # add shape of matrix
     theta_t_prev = wrap_to_pi(x_t_prev[4])
     G_u_t[0] = np.array([DT * DT * np.cos(theta_t_prev), 0, 0])
-    G_u_t[1] = np.array([0, DT * DT * np.sin(theta_t_prev), 0])
+    G_u_t[1] = np.array([DT * DT * np.sin(theta_t_prev), 0, 0])
     G_u_t[2] = np.array([DT * np.cos(theta_t_prev), 0, 0])
-    G_u_t[3] = np.array([0, DT * np.sin(theta_t_prev), 0])
-    G_u_t[3] = np.array([0, 0, CCW * DT])
+    G_u_t[3] = np.array([DT * np.sin(theta_t_prev), 0, 0])
+    G_u_t[3] = np.array([0, 0, DT])
+
+    # theta_t = theta_t_prev
     # G_u_t[0] = np.array([1/2 * DT**2 * np.sin(theta_t), 1/2 * DT**2 * np.cos(theta_t), 0])
     # G_u_t[1] = np.array([1/2 * DT**2 * np.cos(theta_t), 1/2 * DT**2 * np.sin(theta_t), 0])
     # G_u_t[2] = np.array([DT * np.sin(theta_t), DT * np.cos(theta_t), 0])
@@ -408,16 +412,19 @@ def main():
     var_est_t_prev = np.identity(N)
 
     # Preprocess yaw for omega
-    yaw_lidar = CCW * yaw_lidar # flip counterclockwise
+    yaw_lidar = CCW * np.array(yaw_lidar) # flip counterclockwise
     dTheta = np.pad(yaw_lidar,(1,0)) - np.pad(yaw_lidar,(0,1))
     for i, dQ in enumerate(dTheta):
         dTheta[i] = wrap_to_pi(dQ)
     omega = dTheta / DT
+    print(omega[:5])
 
     # Initialize logs
     state_estimates = np.empty((N, len(time_stamps)))
     covariance_estimates = np.empty((N, N, len(time_stamps)))
     gps_estimates = np.empty((2, len(time_stamps)))
+
+    z_t_log = np.empty((3, len(time_stamps)))
 
     # rolling IMU filter
     windowSize = 5
@@ -441,10 +448,11 @@ def main():
 
         # Get measurement
         """STUDENT CODE START"""
-        theta_t = wrap_to_pi(getYaw(state_pred_t))
+        theta_t = wrap_to_pi(np.radians(yaw_lidar[t]))
         z_t = np.array([ 5 - (y_lidar[t] * np.cos(theta_t) + x_lidar[t] * np.sin(theta_t)),
                         -5 - (y_lidar[t] * np.sin(theta_t) - x_lidar[t] * np.cos(theta_t)),
-                        wrap_to_pi(y_lidar[t])])
+                        theta_t])
+        z_t_log[:,t] = z_t
         """STUDENT CODE END"""
 
         # Correction Step
@@ -469,12 +477,22 @@ def main():
     """STUDENT CODE START"""
     xStates = state_estimates[0]
     yStates = state_estimates[1]
-    # plt.scatter(xStates[0], yStates[0])
     # plt.scatter(gps_estimates[0][0], gps_estimates[1][0])
-    plt.scatter(xStates, yStates, c=np.arange(len(xStates)), cmap="gist_rainbow")
-    plt.scatter(gps_estimates[0], gps_estimates[1], c = np.arange(gps_estimates.shape[1]))
+    
+    
+    GPS_N = len(gps_estimates[0])
+    # plt.scatter(xStates[:GPS_N], yStates[:GPS_N], marker='x', c=np.arange(len(xStates)), cmap="gist_rainbow")
+    plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N])
+    # plt.scatter(gps_estimates[0][:GPS_N], gps_estimates[1][:GPS_N], c = np.arange(GPS_N))
 
+    # plt.figure()
+    #plt.plot(z_t_log[2][:GPS_N])
+    # yl = np.zeros_like(yaw_lidar)
+    # for i, yaw in enumerate(np.radians(yaw_lidar)):
+    #     yl[i] = wrap_to_pi(yaw)
+    # plt.plot(yl[:GPS_N])
     plt.show()
+
     """STUDENT CODE END"""
     return 0
 
@@ -498,9 +516,10 @@ def visual():
     y_ddot = data["AccelY"]
 
     windowSize = 5
-    filtered_x_ddot = moving_average(x_ddot, windowSize)
-    plt.plot(x_ddot[600:650])
-    plt.plot(filtered_x_ddot[600:650])
+    filtered_y_ddot = moving_average(y_ddot, windowSize)
+    plt.plot(y_ddot[0:650])
+    plt.plot(filtered_y_ddot[0:650])
+    
 
     # plt.plot(x_lidar, label='x')
     # plt.plot(y_lidar, label='y')
