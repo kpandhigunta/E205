@@ -1,6 +1,6 @@
 """
-Authors: Sean Wu, Kaanthi Pandhigunta, Andrew Q. Pham (template)
-Email: sywu@g.hmc.edu, kpandhigunta@g.hmc.edu, apham@g.hmc.edu
+Authors: Sean Wu, Andrew Q. Pham (template)
+Email: sywu@g.hmc.edu, apham@g.hmc.edu
 Date of Creation: 2/26/20
 Description:
     Extended Kalman Filter implementation to filtering localization estimate
@@ -194,17 +194,10 @@ def calc_prop_jacobian_x(x_t_prev, u_t):
 
     G_x_t = np.empty((5, 5))  # add shape of matrix
     G_x_t[0] = np.array([1, 0, DT, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT * DT])
-    G_x_t[1] = np.array([0, 1, 0, DT, a_x_prime * np.cos(theta_t_prev) * DT * DT])
+    G_x_t[1] = np.array([0, 1, 0, DT,  1 * a_x_prime * np.cos(theta_t_prev) * DT * DT])
     G_x_t[2] = np.array([1, 0, 0, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT])
     G_x_t[3] = np.array([0, 1, 0, 0, a_x_prime * np.cos(theta_t_prev) * DT])
     G_x_t[4] = np.array([0, 0, 0, 0, 1])
-    
-    theta_t = theta_t_prev
-    # G_x_t[0] = np.array([1, 0, DT, 0, 1/2 * DT**2 * ((a_x_prime * np.cos(theta_t)) - (a_y_prime * np.sin(theta_t)))])
-    # G_x_t[1] = np.array([0, 1, 0, DT, 1/2 * DT**2 * (-1*(a_x_prime * np.sin(theta_t)) + (a_y_prime * np.cos(theta_t)))])
-    # G_x_t[2] = np.array([1, 0, 0, 0, 0])
-    # G_x_t[3] = np.array([0, 1, 0, 0, 0])
-    # G_x_t[4] = np.array([0, 0, 0, 0, 1])
     """STUDENT CODE END"""
 
     return G_x_t
@@ -224,8 +217,8 @@ def calc_prop_jacobian_u(x_t_prev, u_t):
     """STUDENT CODE START"""
     G_u_t = np.zeros((5, 3))  # add shape of matrix
     theta_t_prev = wrap_to_pi(x_t_prev[4])
-    G_u_t[0] = np.array([DT * DT * np.cos(theta_t_prev), 0, 0])
-    G_u_t[1] = np.array([DT * DT * np.sin(theta_t_prev), 0, 0])
+    G_u_t[0] = np.array([DT * DT * 1 * np.cos(theta_t_prev), 0, 0])
+    G_u_t[1] = np.array([DT * DT * 1 * np.sin(theta_t_prev), 0, 0])
     G_u_t[2] = np.array([DT * np.cos(theta_t_prev), 0, 0])
     G_u_t[3] = np.array([DT * np.sin(theta_t_prev), 0, 0])
     G_u_t[3] = np.array([0, 0, DT])
@@ -279,15 +272,6 @@ def calc_meas_jacobian(x_bar_t):
     H_t = np.zeros((3, 5))
     for i,j in [(0,0), (1,1), (2,4)]:
         H_t[i,j] = 1
-
-    # xlidar = x_bar_t[0]
-    # ylidar = x_bar_t[1]
-    # theta = x_bar_t[2]
-    # H_t[:,4] = np.array([
-    #     ylidar * np.sin(theta) - xlidar * np.cos(theta),
-    #     -1 * ylidar * np.sin(theta) - ylidar * np.cos(theta),
-    #     1
-    # ]).T
     """STUDENT CODE END"""
 
     return H_t
@@ -327,15 +311,6 @@ def calc_meas_prediction(x_bar_t):
     H_t = calc_meas_jacobian(x_bar_t)
     xytheta_states = H_t @ x_bar_t
     z_bar_t = xytheta_states
-
-    # theta_t = getYaw(x_bar_t)
-    # lidarTransform = np.array([
-    #     -1*np.sin(theta_t), -1*np.cos(theta_t), 0,
-    #     np.cos(theta_t), -1*np.sin(theta_t), 0,
-    #     0, 0, 1]).reshape((3,3))
-    # inverse = np.linalg.inv(lidarTransform)
-    # constants = np.array([5, -5, 0])
-    # z_bar_t = inverse @ (xytheta_states.T - constants.T)
     """STUDENT CODE END"""
 
     return z_bar_t
@@ -417,7 +392,6 @@ def main():
     for i, dQ in enumerate(dTheta):
         dTheta[i] = wrap_to_pi(dQ)
     omega = dTheta / DT
-    print(omega[:5])
 
     # Initialize logs
     state_estimates = np.empty((N, len(time_stamps)))
@@ -475,59 +449,23 @@ def main():
         gps_estimates[:, t] = np.array([x_gps, y_gps])
 
     """STUDENT CODE START"""
+    plt.figure()
+    plt.axis('equal')
     xStates = state_estimates[0]
     yStates = state_estimates[1]
-    # plt.scatter(gps_estimates[0][0], gps_estimates[1][0])
-    
-    
     GPS_N = len(gps_estimates[0])
-    # plt.scatter(xStates[:GPS_N], yStates[:GPS_N], marker='x', c=np.arange(len(xStates)), cmap="gist_rainbow")
-    plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N])
-    # plt.scatter(gps_estimates[0][:GPS_N], gps_estimates[1][:GPS_N], c = np.arange(GPS_N))
-
-    # plt.figure()
-    #plt.plot(z_t_log[2][:GPS_N])
-    # yl = np.zeros_like(yaw_lidar)
-    # for i, yaw in enumerate(np.radians(yaw_lidar)):
-    #     yl[i] = wrap_to_pi(yaw)
-    # plt.plot(yl[:GPS_N])
+    plt.scatter(xStates[:GPS_N], yStates[:GPS_N], marker='x', c=np.arange(len(xStates)), cmap="gist_rainbow", label='estimated path state')
+    plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], label='measurement')
+    plt.scatter(gps_estimates[0][:GPS_N], gps_estimates[1][:GPS_N], c = np.arange(GPS_N), label='expected path')
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.tight_layout()
+    
     plt.show()
+    
 
     """STUDENT CODE END"""
     return 0
 
-def visual():
-    filepath = "../../lab3csv/"
-    #filename = '2020_2_26__16_59_7_filtered'
-    filename = '2020_2_26__17_21_59_filtered'
-    data, is_filtered = load_data(filepath + filename)
-
-    # Load data into variables
-    x_lidar = data["X"]
-    y_lidar = data["Y"]
-    z_lidar = data["Z"]
-    time_stamps = data["Time Stamp"]
-    lat_gps = data["Latitude"]
-    lon_gps = data["Longitude"]
-    yaw_lidar = data["Yaw"]
-    pitch_lidar = data["Pitch"]
-    roll_lidar = data["Roll"]
-    x_ddot = data["AccelX"]
-    y_ddot = data["AccelY"]
-
-    windowSize = 5
-    filtered_y_ddot = moving_average(y_ddot, windowSize)
-    plt.plot(y_ddot[0:650])
-    plt.plot(filtered_y_ddot[0:650])
-    
-
-    # plt.plot(x_lidar, label='x')
-    # plt.plot(y_lidar, label='y')
-    # plt.plot(np.radians(yaw_lidar)-np.pi)
-    #plt.plot(yaw_lidar)
-    # plt.plot(y_ddot)
-    # plt.legend()
-    plt.show()
 
 if __name__ == "__main__":
     main()
