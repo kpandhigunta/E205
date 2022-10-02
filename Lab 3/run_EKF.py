@@ -22,7 +22,7 @@ DT = 0.1
 X_LANDMARK = 5.  # meters
 Y_LANDMARK = -5.  # meters
 EARTH_RADIUS = 6.3781E6  # meters
-CCW = -1
+CCW = 1
 
 def load_data(filename):
     """Load data from the csv log
@@ -361,6 +361,11 @@ def correction_step(x_bar_t, z_t, sigma_x_bar_t):
 
     return [x_est_t, sigma_x_est_t]
 
+def moving_average(x, window_N):
+    left = window_N // 2
+    right = window_N // 2
+    padX = np.pad(x, pad_width=(left, right), mode='edge')
+    return np.convolve(padX, np.ones(window_N)/window_N, 'valid')
 
 def main():
     """Run a EKF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
@@ -398,14 +403,26 @@ def main():
                                      lon_gps[0],
                                      lat_origin,
                                      lon_origin)
-    print('first state', x_gps, y_gps)
     vx_init, vy_init, theta_init = 0, 0, np.radians(0)
     state_est_t_prev = np.array([x_gps, y_gps, vx_init, vy_init, theta_init])
     var_est_t_prev = np.identity(N)
 
+    # Preprocess yaw for omega
+    yaw_lidar = CCW * yaw_lidar # flip counterclockwise
+    dTheta = np.pad(yaw_lidar,(1,0)) - np.pad(yaw_lidar,(0,1))
+    for i, dQ in enumerate(dTheta):
+        dTheta[i] = wrap_to_pi(dQ)
+    omega = dTheta / DT
+
+    # Initialize logs
     state_estimates = np.empty((N, len(time_stamps)))
     covariance_estimates = np.empty((N, N, len(time_stamps)))
     gps_estimates = np.empty((2, len(time_stamps)))
+
+    # rolling IMU filter
+    windowSize = 5
+    filtered_x_ddot = moving_average(x_ddot, windowSize)
+    filtered_y_ddot = moving_average(y_ddot, windowSize)
     """STUDENT CODE END"""
 
 
@@ -413,12 +430,10 @@ def main():
     #  Run filter over data
     for t, _ in enumerate(time_stamps):
         # Get control input
-        """STUDENT CODE START"""
-        theta_t_prev = wrap_to_pi(getYaw(state_est_t_prev))
-        transform_yaw_lidar = wrap_to_pi(np.radians(yaw_lidar[t]))
-        dTheta = wrap_to_pi(CCW * transform_yaw_lidar - theta_t_prev)
-        omega = dTheta / DT
-        u_t = np.array([x_ddot[t], y_ddot[t], omega])
+        """STUDENT CODE START"""        
+        u_t = np.array([filtered_x_ddot[t],
+                        filtered_y_ddot[t],
+                        omega[t]])
         """STUDENT CODE END"""
 
         # Prediction Step
@@ -428,8 +443,8 @@ def main():
         """STUDENT CODE START"""
         theta_t = wrap_to_pi(getYaw(state_pred_t))
         z_t = np.array([ 5 - (y_lidar[t] * np.cos(theta_t) + x_lidar[t] * np.sin(theta_t)),
-                        -5 - (y_lidar[t] * np.sin(theta_t) + x_lidar[t] * np.cos(theta_t)),
-                        CCW * transform_yaw_lidar])
+                        -5 - (y_lidar[t] * np.sin(theta_t) - x_lidar[t] * np.cos(theta_t)),
+                        wrap_to_pi(y_lidar[t])])
         """STUDENT CODE END"""
 
         # Correction Step
@@ -465,8 +480,8 @@ def main():
 
 def visual():
     filepath = "../../lab3csv/"
-    filename = '2020_2_26__16_59_7_filtered'
-    # filename = '2020_2_26__17_21_59'
+    #filename = '2020_2_26__16_59_7_filtered'
+    filename = '2020_2_26__17_21_59_filtered'
     data, is_filtered = load_data(filepath + filename)
 
     # Load data into variables
@@ -482,10 +497,15 @@ def visual():
     x_ddot = data["AccelX"]
     y_ddot = data["AccelY"]
 
+    windowSize = 5
+    filtered_x_ddot = moving_average(x_ddot, windowSize)
+    plt.plot(x_ddot[600:650])
+    plt.plot(filtered_x_ddot[600:650])
+
     # plt.plot(x_lidar, label='x')
     # plt.plot(y_lidar, label='y')
     # plt.plot(np.radians(yaw_lidar)-np.pi)
-    plt.plot(yaw_lidar)
+    #plt.plot(yaw_lidar)
     # plt.plot(y_ddot)
     # plt.legend()
     plt.show()
