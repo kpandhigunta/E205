@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import os.path
+from ellipse import confidence_ellipse
 
 HEIGHT_THRESHOLD = 0.0  # meters
 GROUND_HEIGHT_THRESHOLD = -.4  # meters
@@ -23,6 +24,8 @@ X_LANDMARK = 5.  # meters
 Y_LANDMARK = -5.  # meters
 EARTH_RADIUS = 6.3781E6  # meters
 CCW = -1.0
+EXAMPLEONEPATH = '2020_2_26__16_59_7_filtered'
+EXAMPLETWOPATH = '2020_2_26__17_21_59_filtered'
 
 def load_data(filename):
     """Load data from the csv log
@@ -189,14 +192,14 @@ def calc_prop_jacobian_x(x_t_prev, u_t):
     G_x_t (np.array)    -- Jacobian of motion model wrt to x
     """
     """STUDENT CODE START"""
-    a_x_prime = u_t[0]
-    theta_t_prev = wrap_to_pi(x_t_prev[4])
+    a_x_prime = 1.2 * u_t[0]
+    theta_t_prev = getYaw(x_t_prev)
 
     G_x_t = np.empty((5, 5))  # add shape of matrix
-    G_x_t[0] = np.array([1, 0, DT, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT * DT])
-    G_x_t[1] = np.array([0, 1, 0, DT,  1 * a_x_prime * np.cos(theta_t_prev) * DT * DT])
-    G_x_t[2] = np.array([1, 0, 0, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT])
-    G_x_t[3] = np.array([0, 1, 0, 0, a_x_prime * np.cos(theta_t_prev) * DT])
+    G_x_t[0] = np.array([1, 0, DT, 0, 0])
+    G_x_t[1] = np.array([0, 1, 0, DT, 0])
+    G_x_t[2] = np.array([0, 0, 1, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT ])
+    G_x_t[3] = np.array([0, 0, 0, 1, a_x_prime * np.cos(theta_t_prev) * DT])
     G_x_t[4] = np.array([0, 0, 0, 0, 1])
     """STUDENT CODE END"""
 
@@ -215,20 +218,13 @@ def calc_prop_jacobian_u(x_t_prev, u_t):
     """
 
     """STUDENT CODE START"""
-    G_u_t = np.zeros((5, 3))  # add shape of matrix
+    G_u_t = np.zeros((5, 2))  # add shape of matrix
     theta_t_prev = wrap_to_pi(x_t_prev[4])
-    G_u_t[0] = np.array([DT * DT * 1 * np.cos(theta_t_prev), 0, 0])
-    G_u_t[1] = np.array([DT * DT * 1 * np.sin(theta_t_prev), 0, 0])
-    G_u_t[2] = np.array([DT * np.cos(theta_t_prev), 0, 0])
-    G_u_t[3] = np.array([DT * np.sin(theta_t_prev), 0, 0])
-    G_u_t[3] = np.array([0, 0, DT])
-
-    # theta_t = theta_t_prev
-    # G_u_t[0] = np.array([1/2 * DT**2 * np.sin(theta_t), 1/2 * DT**2 * np.cos(theta_t), 0])
-    # G_u_t[1] = np.array([1/2 * DT**2 * np.cos(theta_t), 1/2 * DT**2 * np.sin(theta_t), 0])
-    # G_u_t[2] = np.array([DT * np.sin(theta_t), DT * np.cos(theta_t), 0])
-    # G_u_t[3] = np.array([DT * np.cos(theta_t), DT * np.sin(theta_t), 0])
-    # G_u_t[3] = np.array([0, 0, DT])
+    G_u_t[0] = np.array([0, 0])
+    G_u_t[1] = np.array([0, 0])
+    G_u_t[2] = np.array([DT * np.cos(theta_t_prev), 0])
+    G_u_t[3] = np.array([DT * np.sin(theta_t_prev), 0])
+    G_u_t[3] = np.array([0, DT])
     """STUDENT CODE END"""
 
     return G_u_t
@@ -249,10 +245,10 @@ def prediction_step(x_t_prev, u_t, sigma_x_t_prev):
 
     """STUDENT CODE START"""
     # Covariance matrix of control input
-    sigma_u_t = np.identity(3)  # add shape of matrix
+    sigma_u_t = np.identity(2)  # add shape of matrix
     G_x_t = calc_prop_jacobian_x(x_t_prev, u_t)
     G_u_t = calc_prop_jacobian_u(x_t_prev, u_t)
-    x_bar_t = G_x_t @ x_t_prev + G_u_t @ u_t
+    x_bar_t =  G_x_t @ x_t_prev + G_u_t @ u_t
     sigma_x_bar_t = G_x_t @ sigma_x_t_prev @ G_x_t.T + G_u_t @ sigma_u_t @ G_u_t.T
     """STUDENT CODE END"""
 
@@ -333,7 +329,7 @@ def correction_step(x_bar_t, z_t, sigma_x_bar_t):
     H_t = calc_meas_jacobian(x_bar_t)
     K_t = calc_kalman_gain(sigma_x_bar_t, H_t)
     z_bar_t = calc_meas_prediction(x_bar_t)
-    x_est_t = x_bar_t + K_t @ (z_t - z_bar_t)
+    x_est_t = x_bar_t +  K_t @ (z_t - z_bar_t)
     I = np.identity(5)
     sigma_x_est_t = (I - (K_t @ H_t)) @ sigma_x_bar_t
     """STUDENT CODE END"""
@@ -350,8 +346,7 @@ def main():
     """Run a EKF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
 
     filepath = "../../lab3csv/"
-    #filename = '2020_2_26__16_59_7_filtered'
-    filename = '2020_2_26__17_21_59_filtered'
+    filename = EXAMPLETWOPATH
     data, is_filtered = load_data(filepath + filename)
 
     # Save filtered data so don't have to process unfiltered data everytime
@@ -377,18 +372,26 @@ def main():
 
     #  Initialize filter
     """STUDENT CODE START"""
-    N =  5 # number of states
+    N = 5 # number of states
     x_gps, y_gps = convert_gps_to_xy(lat_gps[0],
                                      lon_gps[0],
                                      lat_origin,
                                      lon_origin)
     vx_init, vy_init, theta_init = 0, 0, np.radians(0)
+    
+    
+    # Prof Shia's
+    # if filename == EXAMPLETWOPATH:
+    #     state_est_t_prev = np.array([ 2.01, -0.1, 0.94, -0.01, -0.02])
+    # elif filename == EXAMPLEONEPATH:
+    #     state_est_t_prev = np.array([ 9.13, -9.77, -0.74, -0.11, -3.23])
+    # else:
     state_est_t_prev = np.array([x_gps, y_gps, vx_init, vy_init, theta_init])
     var_est_t_prev = np.identity(N)
 
     # Preprocess yaw for omega
-    yaw_lidar = CCW * np.array(yaw_lidar) # flip counterclockwise
-    dTheta = np.pad(yaw_lidar,(1,0)) - np.pad(yaw_lidar,(0,1))
+    yaw_lidar = -1 * np.radians(np.array(yaw_lidar)) # flip counterclockwise
+    dTheta = np.pad(yaw_lidar,(0,1)) - np.pad(yaw_lidar,(1,0))
     for i, dQ in enumerate(dTheta):
         dTheta[i] = wrap_to_pi(dQ)
     omega = dTheta / DT
@@ -397,13 +400,12 @@ def main():
     state_estimates = np.empty((N, len(time_stamps)))
     covariance_estimates = np.empty((N, N, len(time_stamps)))
     gps_estimates = np.empty((2, len(time_stamps)))
-
+    xy_cov_log = np.empty((2, len(time_stamps)))
     z_t_log = np.empty((3, len(time_stamps)))
 
     # rolling IMU filter
     windowSize = 5
     filtered_x_ddot = moving_average(x_ddot, windowSize)
-    filtered_y_ddot = moving_average(y_ddot, windowSize)
     """STUDENT CODE END"""
 
 
@@ -413,16 +415,14 @@ def main():
         # Get control input
         """STUDENT CODE START"""        
         u_t = np.array([filtered_x_ddot[t],
-                        filtered_y_ddot[t],
                         omega[t]])
         """STUDENT CODE END"""
 
         # Prediction Step
         state_pred_t, var_pred_t = prediction_step(state_est_t_prev, u_t, var_est_t_prev)
-
         # Get measurement
         """STUDENT CODE START"""
-        theta_t = wrap_to_pi(np.radians(yaw_lidar[t]))
+        theta_t = wrap_to_pi(yaw_lidar[t])
         z_t = np.array([ 5 - (y_lidar[t] * np.cos(theta_t) + x_lidar[t] * np.sin(theta_t)),
                         -5 - (y_lidar[t] * np.sin(theta_t) - x_lidar[t] * np.cos(theta_t)),
                         theta_t])
@@ -447,25 +447,43 @@ def main():
                                          lat_origin=lat_origin,
                                          lon_origin=lon_origin)
         gps_estimates[:, t] = np.array([x_gps, y_gps])
+        xy_cov_log[:, t] = np.array([var_est_t[0,0], var_est_t[1,1]])
 
     """STUDENT CODE START"""
     plt.figure()
     plt.axis('equal')
-    xStates = state_estimates[0]
-    yStates = state_estimates[1]
     GPS_N = len(gps_estimates[0])
-    plt.scatter(xStates[:GPS_N], yStates[:GPS_N], marker='x', c=np.arange(len(xStates)), cmap="gist_rainbow", label='estimated path state')
-    plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], label='measurement')
-    plt.scatter(gps_estimates[0][:GPS_N], gps_estimates[1][:GPS_N], c = np.arange(GPS_N), label='expected path')
+    plt.plot(gps_estimates[0], gps_estimates[1], c='darkblue', label='expected path (GPS)')
+    plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], s=0.5, c='forestgreen', label='measurement (Lidar)')
+    plt.plot(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N], c='red', label='estimated path state (KF)')
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    #plt.ylim((-20,2))
+    #plt.yticks(np.arange(-20, 2, 5))
     plt.tight_layout()
     
-    plt.show()
-    
 
+    # plt.figure()
+    # plt.plot(np.arange(len(time_stamps)), xy_cov_log[0])
+    # plt.figure()
+    # plt.plot(np.arange(len(time_stamps)), xy_cov_log[1])
+
+   
+    # plt.figure()
+    # ax = plt.gca()
+    # confidence_ellipse(xy_cov_log[0], xy_cov_log[1], ax)
+
+    plt.show()
     """STUDENT CODE END"""
     return 0
 
+def testFilter():
+    x = np.sin(np.arange(0,10,0.1)) + 0.4 * np.random.random(100)
+    xfilt1 = moving_average(x, window_N=10)
+    xfilt = moving_average(x, window_N=3)
+    plt.plot(x)
+    plt.plot(xfilt)
+    plt.plot(xfilt1)
+    plt.show()
 
 if __name__ == "__main__":
     main()
