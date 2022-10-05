@@ -192,15 +192,14 @@ def calc_prop_jacobian_x(x_t_prev, u_t):
     G_x_t (np.array)    -- Jacobian of motion model wrt to x
     """
     """STUDENT CODE START"""
-    a_x_prime = 1.2 * u_t[0]
-    theta_t_prev = getYaw(x_t_prev)
+    a_x_prime = u_t[0]
+    theta_t_prev = wrap_to_pi(getYaw(x_t_prev))
 
-    G_x_t = np.empty((5, 5))  # add shape of matrix
-    G_x_t[0] = np.array([1, 0, DT, 0, 0])
-    G_x_t[1] = np.array([0, 1, 0, DT, 0])
-    G_x_t[2] = np.array([0, 0, 1, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT ])
-    G_x_t[3] = np.array([0, 0, 0, 1, a_x_prime * np.cos(theta_t_prev) * DT])
-    G_x_t[4] = np.array([0, 0, 0, 0, 1])
+    G_x_t = np.array([[1, 0, DT, 0, 0],
+                      [0, 1, 0, DT, 0],
+                      [0, 0, 1, 0, -1 * a_x_prime * np.sin(theta_t_prev) * DT ],
+                      [0, 0, 0, 1, a_x_prime * np.cos(theta_t_prev) * DT],
+                      [0, 0, 0, 0, 1]])
     """STUDENT CODE END"""
 
     return G_x_t
@@ -218,13 +217,12 @@ def calc_prop_jacobian_u(x_t_prev, u_t):
     """
 
     """STUDENT CODE START"""
-    G_u_t = np.zeros((5, 2))  # add shape of matrix
-    theta_t_prev = wrap_to_pi(x_t_prev[4])
-    G_u_t[0] = np.array([0, 0])
-    G_u_t[1] = np.array([0, 0])
-    G_u_t[2] = np.array([DT * np.cos(theta_t_prev), 0])
-    G_u_t[3] = np.array([DT * np.sin(theta_t_prev), 0])
-    G_u_t[3] = np.array([0, DT])
+    theta_t_prev = wrap_to_pi(getYaw(x_t_prev))
+    G_u_t = np.array([[0, 0],
+                      [0, 0],
+                      [DT * np.cos(theta_t_prev), 0],
+                      [DT * np.sin(theta_t_prev), 0],
+                      [0, DT]])
     """STUDENT CODE END"""
 
     return G_u_t
@@ -390,7 +388,7 @@ def main():
     var_est_t_prev = np.identity(N)
 
     # Preprocess yaw for omega
-    yaw_lidar = -1 * np.radians(np.array(yaw_lidar)) # flip counterclockwise
+    yaw_lidar = np.radians(CCW * np.array(yaw_lidar)) # flip counterclockwise
     dTheta = np.pad(yaw_lidar,(0,1)) - np.pad(yaw_lidar,(1,0))
     for i, dQ in enumerate(dTheta):
         dTheta[i] = wrap_to_pi(dQ)
@@ -406,6 +404,7 @@ def main():
     # rolling IMU filter
     windowSize = 5
     filtered_x_ddot = moving_average(x_ddot, windowSize)
+    filtered_x_ddot = x_ddot
     """STUDENT CODE END"""
 
 
