@@ -349,7 +349,7 @@ def moving_average(x, window_N):
 def square(list):
     return [i ** 2 for i in list]
 
-def find_RMS_error(estimated_x, estimated_y):
+def find_RMS_error(time_stamps, estimated_x, estimated_y):
     distances = []
     for i in range(len(estimated_x)):
         dist_all = []
@@ -366,6 +366,10 @@ def find_RMS_error(estimated_x, estimated_y):
             dist = math.dist([estimated_x[i], estimated_y[i]], [0, left])
             dist_all.append(dist)
         distances.append(min(dist_all))
+    plt.figure()
+    plt.plot(np.linspace(0, 70, len(distances)), distances)
+    plt.xlabel('time (s)')
+    plt.ylabel('distance between estimated and expected paths (m)')
     return math.sqrt(sum(square(distances))/len(distances))
 
 def main():
@@ -496,7 +500,7 @@ def main():
     #plt.yticks(np.arange(-20, 2, 5))
     plt.tight_layout()
 
-    print(find_RMS_error(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
+    print(find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
     
 
     # plt.figure()
