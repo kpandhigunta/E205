@@ -8,6 +8,7 @@ Description:
     Student code version with parts omitted.
 """
 
+from cmath import sqrt
 import csv
 import time
 import sys
@@ -345,6 +346,28 @@ def moving_average(x, window_N):
     padX = np.pad(x, pad_width=(left, right), mode='edge')
     return np.convolve(padX, np.ones(window_N)/window_N, 'valid')
 
+def square(list):
+    return [i ** 2 for i in list]
+
+def find_RMS_error(estimated_x, estimated_y):
+    distances = []
+    for i in range(len(estimated_x)):
+        dist_all = []
+        for top in np.linspace(0, 10, 100): # top
+            dist = math.dist([estimated_x[i], estimated_y[i]], [top, 0])
+            dist_all.append(dist)
+        for right in np.linspace(0, -10, 100): # right
+            dist = math.dist([estimated_x[i], estimated_y[i]], [10, right])
+            dist_all.append(dist)
+        for bottom in np.linspace(0, 10, 100): # bottom
+            dist = math.dist([estimated_x[i], estimated_y[i]], [bottom, -10])
+            dist_all.append(dist)
+        for left in np.linspace(-10, 0, 100): # right
+            dist = math.dist([estimated_x[i], estimated_y[i]], [0, left])
+            dist_all.append(dist)
+        distances.append(min(dist_all))
+    return math.sqrt(sum(square(distances))/len(distances))
+
 def main():
     """Run a EKF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
 
@@ -457,13 +480,23 @@ def main():
     plt.figure()
     plt.axis('equal')
     GPS_N = len(gps_estimates[0])
-    plt.plot(gps_estimates[0], gps_estimates[1], c='darkblue', label='expected path (GPS)')
+    plt.plot(gps_estimates[0], gps_estimates[1], c='darkblue', label='GPS data')
     plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], s=0.5, c='forestgreen', label='measurement (Lidar)')
+
+    # plot perfect square
+    plt.plot(np.linspace(0, 10, 100), np.linspace(0, 0, 100), c = 'orange')
+    plt.plot(np.linspace(10, 10, 100), np.linspace(0, -10, 100), c = 'orange')
+    plt.plot(np.linspace(0, 10, 100), np.linspace(-10, -10, 100), c = 'orange')
+    plt.plot(np.linspace(0, 0, 100), np.linspace(-10, 0, 100), c = 'orange', label='expected path')
+
     plt.plot(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N], c='red', label='estimated path state (KF)')
+
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     #plt.ylim((-20,2))
     #plt.yticks(np.arange(-20, 2, 5))
     plt.tight_layout()
+
+    print(find_RMS_error(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
     
 
     # plt.figure()
