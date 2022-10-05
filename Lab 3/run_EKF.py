@@ -51,7 +51,7 @@ def load_data(filename):
     header = ["X", "Y", "Z", "Time Stamp", "Latitude", "Longitude",
               "Yaw", "Pitch", "Roll", "AccelX", "AccelY", "AccelZ"]
     for h in header:
-        data[h] = []
+        data[h] = [] 
 
     row_num = 0
     f_log = open("bad_data_log.txt", "w")
@@ -167,18 +167,20 @@ def propogate_state(x_t_prev, u_t):
     x_bar_t (np.array)   -- the predicted state
     """
     """STUDENT CODE START"""
-    G_x_t = calc_prop_jacobian_x(x_t_prev, u_t)
-    G_u_t = calc_prop_jacobian_u(x_t_prev, u_t)
+    x_prev, y_prev, vx_prev, vy_prev, theta_prev = x_t_prev
+    a_x_prime, omega = u_t
 
-    x_bar_t = G_x_t * x_t_prev + G_u_t * u_t
+    x_bar_t = np.array([
+        x_prev + vx_prev * DT,
+        y_prev + vy_prev * DT,
+        vx_prev + a_x_prime * np.cos(theta_prev) * DT,
+        vy_prev + a_x_prime * np.sin(theta_prev) * DT,
+        theta_prev + omega * DT
+    ])
     """STUDENT CODE END"""
 
     return x_bar_t
 
-def getX(x_t): return x_t[0]
-def getY(x_t): return x_t[1]
-def getXdot(x_t): return x_t[2]
-def getYdot(x_t): return x_t[3]
 def getYaw(x_t): return x_t[4]
 
 def calc_prop_jacobian_x(x_t_prev, u_t):
@@ -244,9 +246,9 @@ def prediction_step(x_t_prev, u_t, sigma_x_t_prev):
     """STUDENT CODE START"""
     # Covariance matrix of control input
     sigma_u_t = np.identity(2)  # add shape of matrix
+    x_bar_t =  propogate_state(x_t_prev, u_t)
     G_x_t = calc_prop_jacobian_x(x_t_prev, u_t)
     G_u_t = calc_prop_jacobian_u(x_t_prev, u_t)
-    x_bar_t =  G_x_t @ x_t_prev + G_u_t @ u_t
     sigma_x_bar_t = G_x_t @ sigma_x_t_prev @ G_x_t.T + G_u_t @ sigma_u_t @ G_u_t.T
     """STUDENT CODE END"""
 
@@ -327,7 +329,10 @@ def correction_step(x_bar_t, z_t, sigma_x_bar_t):
     H_t = calc_meas_jacobian(x_bar_t)
     K_t = calc_kalman_gain(sigma_x_bar_t, H_t)
     z_bar_t = calc_meas_prediction(x_bar_t)
-    x_est_t = x_bar_t +  K_t @ (z_t - z_bar_t)
+    delta_z = z_t - z_bar_t
+
+    delta_z[2] = wrap_to_pi(delta_z[2])
+    x_est_t = x_bar_t +  K_t @ (delta_z)
     I = np.identity(5)
     sigma_x_est_t = (I - (K_t @ H_t)) @ sigma_x_bar_t
     """STUDENT CODE END"""
