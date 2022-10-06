@@ -14,9 +14,9 @@ import time
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import math
 import os.path
-from ellipse import confidence_ellipse
+import math
+from RMS import find_RMS_error
 
 HEIGHT_THRESHOLD = 0.0  # meters
 GROUND_HEIGHT_THRESHOLD = -.4  # meters
@@ -346,31 +346,7 @@ def moving_average(x, window_N):
     padX = np.pad(x, pad_width=(left, right), mode='edge')
     return np.convolve(padX, np.ones(window_N)/window_N, 'valid')
 
-def square(list):
-    return [i ** 2 for i in list]
 
-def find_RMS_error(time_stamps, estimated_x, estimated_y):
-    distances = []
-    for i in range(len(estimated_x)):
-        dist_all = []
-        for top in np.linspace(0, 10, 100): # top
-            dist = math.dist([estimated_x[i], estimated_y[i]], [top, 0])
-            dist_all.append(dist)
-        for right in np.linspace(0, -10, 100): # right
-            dist = math.dist([estimated_x[i], estimated_y[i]], [10, right])
-            dist_all.append(dist)
-        for bottom in np.linspace(0, 10, 100): # bottom
-            dist = math.dist([estimated_x[i], estimated_y[i]], [bottom, -10])
-            dist_all.append(dist)
-        for left in np.linspace(-10, 0, 100): # right
-            dist = math.dist([estimated_x[i], estimated_y[i]], [0, left])
-            dist_all.append(dist)
-        distances.append(min(dist_all))
-    plt.figure()
-    plt.plot(np.linspace(0, 70, len(distances)), distances)
-    plt.xlabel('time (s)')
-    plt.ylabel('distance between estimated and expected paths (m)')
-    return math.sqrt(sum(square(distances))/len(distances))
 
 def main():
     """Run a EKF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
@@ -500,7 +476,7 @@ def main():
     #plt.yticks(np.arange(-20, 2, 5))
     plt.tight_layout()
 
-    print(find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
+    print('approximate RMS:', find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
     
 
     # plt.figure()
