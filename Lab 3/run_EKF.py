@@ -17,6 +17,7 @@ import numpy as np
 import os.path
 import math
 from RMS import find_RMS_error
+from ellipse import printPearsons
 
 HEIGHT_THRESHOLD = 0.0  # meters
 GROUND_HEIGHT_THRESHOLD = -.4  # meters
@@ -477,18 +478,7 @@ def main():
     plt.tight_layout()
 
     print('approximate RMS:', find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
-    
-
-    # plt.figure()
-    # plt.plot(np.arange(len(time_stamps)), xy_cov_log[0])
-    # plt.figure()
-    # plt.plot(np.arange(len(time_stamps)), xy_cov_log[1])
-
-   
-    # plt.figure()
-    # ax = plt.gca()
-    # confidence_ellipse(xy_cov_log[0], xy_cov_log[1], ax)
-
+    printPearsons(state_estimates, covariance_estimates)
     plt.show()
     """STUDENT CODE END"""
     return 0
