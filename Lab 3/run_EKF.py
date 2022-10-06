@@ -472,10 +472,19 @@ def main():
 
     plt.plot(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N], c='red', label='estimated path state (KF)')
 
+    plt.xlabel('x position (m)')
+    plt.ylabel('y position (m)')
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     #plt.ylim((-20,2))
     #plt.yticks(np.arange(-20, 2, 5))
     plt.tight_layout()
+
+    plt.figure()
+    for i in range(len(state_estimates[4])):
+        state_estimates[4][i] = wrap_to_pi(state_estimates[4][i])
+    plt.plot(np.linspace(0, 70, len(state_estimates[4])), state_estimates[4])
+    plt.xlabel('time (s)')
+    plt.ylabel('yaw angle (rad)')
 
     print('approximate RMS:', find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
     printPearsons(state_estimates, covariance_estimates)
