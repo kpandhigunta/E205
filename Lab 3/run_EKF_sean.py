@@ -18,6 +18,7 @@ import os.path
 import math
 from RMS import find_RMS_error
 from ellipse import printPearsons
+from covarianceplot import plotCovariance
 
 HEIGHT_THRESHOLD = 0.0  # meters
 GROUND_HEIGHT_THRESHOLD = -.4  # meters
@@ -479,6 +480,7 @@ def main():
 
     print('approximate RMS:', find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
     printPearsons(state_estimates, covariance_estimates)
+    plotCovariance(covariance_estimates)
     plt.show()
     """STUDENT CODE END"""
     return 0
