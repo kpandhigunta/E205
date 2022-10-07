@@ -27,7 +27,7 @@ def main():
     filename="./shelve.out"
     my_shelf = shelve.open(filename, "n") # 'n' for new
 
-    filepath = "../"
+    filepath = "../../lab3csv/"
     filename = "2020_2_26__16_59_7_filtered"
     data, is_filtered = load_data(filepath + filename)
 
@@ -57,7 +57,27 @@ def main():
 
     #  Initialize filter
     """STUDENT CODE START"""
-    """STUDENT CODE END"""
+    # Preprocess Yaw
+    yaw_lidar = np.radians(CCW * np.array(yaw_lidar)) # flip counterclockwise
+    dTheta = np.pad(yaw_lidar,(0,1)) - np.pad(yaw_lidar,(1,0))
+    for i, dQ in enumerate(dTheta):
+        dTheta[i] = wrap_to_pi(dQ)
+    omega = dTheta / DT
+
+    # Initialize particles
+    NUM_PARTICLES = 1000
+    NUM_STATES = 6
+    np.random.seed(1234)
+    belief_states = np.empty((NUM_STATES, NUM_PARTICLES))
+    belief_states[0] = 4 * np.random.random(NUM_PARTICLES) - 2
+    belief_states[1] = 4 * np.random.random(NUM_PARTICLES) - 2
+    belief_states[2] = np.zeros(NUM_PARTICLES)
+    belief_states[3] = np.zeros(NUM_PARTICLES)
+    belief_states[4] = 2 * np.pi * np.random.random(NUM_PARTICLES) - np.pi
+    belief_states[5] = np.ones(NUM_PARTICLES)
+    print(belief_states[:,0:5])
+    """STUDENT CODE END""" 
+    return
 
     #  Run filter over data
     for t, _ in enumerate(time_stamps):
