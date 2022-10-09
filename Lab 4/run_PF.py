@@ -15,6 +15,7 @@ import shelve
 from utils import *
 from prediction import prediction_step
 from resample import resample_step
+from RMS import find_RMS_error
 
 
 def moving_average(x, window = 10):
@@ -76,6 +77,12 @@ def main():
     belief_states[4] = 2 * np.pi * np.random.random(NUM_PARTICLES) - np.pi
     belief_states[5] = np.ones(NUM_PARTICLES)
     print(belief_states[:,0:5])
+
+    # convert lidar measurement to z_t
+    theta_t = wrap_to_pi(yaw_lidar[t])
+    z_t = np.array([ 5 - (y_lidar[t] * np.cos(theta_t) + x_lidar[t] * np.sin(theta_t)),
+                    -5 - (y_lidar[t] * np.sin(theta_t) - x_lidar[t] * np.cos(theta_t)),
+                    theta_t])
     """STUDENT CODE END""" 
     return
 
@@ -83,6 +90,10 @@ def main():
     for t, _ in enumerate(time_stamps):
         # Get control input
         """STUDENT CODE START"""
+        u_t = np.array([
+            x_ddot[t],
+            omega[t]
+        ])
         """STUDENT CODE END"""
 
         # Prediction Step
@@ -114,7 +125,36 @@ def main():
 
 
     """STUDENT CODE START"""
-    # Plot here
+    plt.figure()
+    plt.axis('equal')
+    GPS_N = len(gps_estimates[0])
+    plt.plot(gps_estimates[0], gps_estimates[1], c='darkblue', label='GPS data')
+    plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], s=0.5, c='forestgreen', label='measurement (Lidar)')
+
+    # plot perfect square
+    plt.plot(np.linspace(0, 10, 100), np.linspace(0, 0, 100), c = 'orange')
+    plt.plot(np.linspace(10, 10, 100), np.linspace(0, -10, 100), c = 'orange')
+    plt.plot(np.linspace(0, 10, 100), np.linspace(-10, -10, 100), c = 'orange')
+    plt.plot(np.linspace(0, 0, 100), np.linspace(-10, 0, 100), c = 'orange', label='expected path')
+
+    plt.plot(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N], c='red', label='estimated path state (KF)')
+
+    plt.xlabel('x position (m)')
+    plt.ylabel('y position (m)')
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    #plt.ylim((-20,2))
+    #plt.yticks(np.arange(-20, 2, 5))
+    plt.tight_layout()
+
+    plt.figure()
+    for i in range(len(state_estimates[4])):
+        state_estimates[4][i] = wrap_to_pi(state_estimates[4][i])
+    plt.plot(np.linspace(0, 70, len(state_estimates[4])), state_estimates[4])
+    plt.xlabel('time (s)')
+    plt.ylabel('yaw angle (rad)')
+
+    print('approximate RMS:', find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
+    plt.show()
     """STUDENT CODE END"""
     return 0
 
