@@ -13,11 +13,19 @@ def resample_step(x_bar_t):
     weight_index = 5
     xythetas = x_bar_t[xytheta_indices]
     weights = x_bar_t[weight_index]
-    x_new, y_new, theta_new = np.random.Generator.choice(
+    rng = np.random.default_rng()
+    p = weights / np.sum(weights)
+    if np.sum(weights == 0):
+        p = np.ones_like(weights) / len(weights)
+
+    x_new, y_new, theta_new = rng.choice(
         xythetas,
-        p = weights,
+        size = xythetas.shape[1],
+        p = weights / np.sum(weights),
         axis = 1) # select by columns
-    x_bar_t[xytheta_indices] = np.array([x_new, y_new, theta_new])
+    x_bar_t[0] = x_new
+    x_bar_t[1] = y_new
+    x_bar_t[4] = theta_new
     x_est_t = x_bar_t
     """STUDENT CODE END"""
 
