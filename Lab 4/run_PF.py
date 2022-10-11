@@ -142,11 +142,10 @@ def main():
     x_est = []
     y_est = []
     for t, _ in enumerate(time_stamps):
-        x = sum([state_estimates[0,i,t]*state_estimates[5,i,t] for i in range(len(state_estimates[0,:,t]))])
-        y = sum([state_estimates[1,i,t]*state_estimates[5,i,t] for i in range(len(state_estimates[1,:,t]))])
-        den = sum(state_estimates[5,:,t])
-        x_est.append(x/den)
-        y_est.append(y/den)
+        x = np.average(state_estimates[0,:,t], weights = state_estimates[5,:,t])
+        y = np.average(state_estimates[1,:,t], weights = state_estimates[5,:,t])
+        x_est.append(x)
+        y_est.append(y)
         if t % 100 == 1:
             plt.scatter(state_estimates[0,:,t], state_estimates[1,:,t], color=(0.1, 0.2 + t/780.0/1.8, 0.5, 0.2 + t/780.0/1.8))
 
@@ -156,32 +155,22 @@ def main():
     GPS_N = len(gps_estimates[0])
     plt.plot(gps_estimates[0], gps_estimates[1], c='darkblue', label='GPS data')
     plt.plot(x_est, y_est, c='red', label='estimated path')
-    plt.legend()
-    
-
-    #plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], s=0.5, c='forestgreen', label='measurement (Lidar)')
 
     # plot perfect square
-    # plt.plot(np.linspace(0, 10, 100), np.linspace(0, 0, 100), c = 'orange')
-    # plt.plot(np.linspace(10, 10, 100), np.linspace(0, -10, 100), c = 'orange')
-    # plt.plot(np.linspace(0, 10, 100), np.linspace(-10, -10, 100), c = 'orange')
-    # plt.plot(np.linspace(0, 0, 100), np.linspace(-10, 0, 100), c = 'orange', label='expected path')
+    plt.plot(np.linspace(0, 10, 100), np.linspace(0, 0, 100), c = 'darkorange')
+    plt.plot(np.linspace(10, 10, 100), np.linspace(0, -10, 100), c = 'darkorange')
+    plt.plot(np.linspace(0, 10, 100), np.linspace(-10, -10, 100), c = 'darkorange')
+    plt.plot(np.linspace(0, 0, 100), np.linspace(-10, 0, 100), c = 'darkorange', label='expected path')
 
-    # plt.plot(state_estimates[0][:GPS_N], state_estimates[1][:GPS_N], c='red', label='estimated path state (KF)')
+    plt.legend(bbox_to_anchor=(1, 0.5), loc="center left")
+    plt.tight_layout()
+    plt.xlabel('x position (m)')
+    plt.ylabel('y position (m)')
 
-    # plt.xlabel('x position (m)')
-    # plt.ylabel('y position (m)')
-    # plt.legend(bbox_to_anchor=(1,1), loc="upper left")
-    # #plt.ylim((-20,2))
-    # #plt.yticks(np.arange(-20, 2, 5))
-    # plt.tight_layout()
-
-    # plt.figure()
-    # for i in range(len(state_estimates[4])):
-    #     state_estimates[4][i] = wrap_to_pi(state_estimates[4][i])
-    # plt.plot(np.linspace(0, 70, len(state_estimates[4])), state_estimates[4])
-    # plt.xlabel('time (s)')
-    # plt.ylabel('yaw angle (rad)')
+    print('approximate RMS:', find_RMS_error(x_est, y_est))
+    plt.xlabel('time [s]')
+    plt.ylabel('error [m]')
+    plt.title('Error of estimated path from perfect square')
 
     # print('approximate RMS:', find_RMS_error(time_stamps, state_estimates[0][:GPS_N], state_estimates[1][:GPS_N]))
     plt.show()

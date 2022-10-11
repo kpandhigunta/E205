@@ -3,9 +3,9 @@ from utils import *
 from scipy.stats import multivariate_normal
 
 STD = 1
-X_VAR = 0.5
-Y_VAR = 0.5
-THETA_VAR = 0.2
+X_VAR = 0.25
+Y_VAR = 0.25
+THETA_VAR = np.pi
 NUM_PARTICLES = 100
 MU = np.zeros(NUM_PARTICLES)
 
@@ -27,8 +27,6 @@ def propogate_state(x_t_prev, u_t_noiseless):
     vx_n = vx_n_prev + a_x_prime * np.cos(theta_n_prev) * DT
     vy_n = vy_n_prev + a_x_prime * np.sin(theta_n_prev) * DT
     theta_n = theta_n_prev + omega * DT
-    for i in range(theta_n.shape[0]):
-        theta_n[i] = wrap_to_pi(theta_n[i])
     x_bar_t = np.array([x_n, y_n, vx_n, vy_n, theta_n, weight_prev])
     """STUDENT CODE END"""
     return x_bar_t
@@ -52,6 +50,8 @@ def prediction_step(x_t_prev, u_t, z_t):
     x_noisy = x_n + np.random.multivariate_normal(MU, X_VAR * np.identity(NUM_PARTICLES))
     y_noisy = y_n + np.random.multivariate_normal(MU, Y_VAR * np.identity(NUM_PARTICLES))
     theta_n = theta_n + np.random.multivariate_normal(MU, THETA_VAR * np.identity(NUM_PARTICLES))
+    for i in range(theta_n.shape[0]):
+        theta_n[i] = wrap_to_pi(theta_n[i])
     x_bar_t = np.array([x_noisy, y_noisy, vx_n, vy_n, theta_n, weight_prev])
 
     # Correction Step

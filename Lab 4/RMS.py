@@ -5,7 +5,7 @@ import math
 def square(list):
     return [i ** 2 for i in list]
 
-def find_RMS_error(time_stamps, estimated_x, estimated_y):
+def find_RMS_error(estimated_x, estimated_y):
     distances = []
     for i in range(len(estimated_x)):
         dist_all = []
