@@ -15,13 +15,13 @@ def resample_step(x_bar_t):
     weights = x_bar_t[weight_index]
     rng = np.random.default_rng()
     p = weights / np.sum(weights)
-    if np.sum(weights == 0):
+    if np.sum(weights) == 0:
         p = np.ones_like(weights) / len(weights)
 
     x_new, y_new, theta_new = rng.choice(
         xythetas,
         size = xythetas.shape[1],
-        p = weights / np.sum(weights),
+        p = p,
         axis = 1) # select by columns
     x_bar_t[0] = x_new
     x_bar_t[1] = y_new

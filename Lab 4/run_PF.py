@@ -29,6 +29,7 @@ def main():
     # my_shelf = shelve.open(filename, "n") # 'n' for new
 
     filepath = "../../lab3csv/"
+    # filename = "2020_2_26__17_21_59_filtered"
     filename = "2020_2_26__16_59_7_filtered"
     data, is_filtered = load_data(filepath + filename)
 
