@@ -139,7 +139,14 @@ def main():
 
     """STUDENT CODE START"""
     #plt.figure()
+    x_est = []
+    y_est = []
     for t, _ in enumerate(time_stamps):
+        x = sum([state_estimates[0,i,t]*state_estimates[5,i,t] for i in range(len(state_estimates[0,:,t]))])
+        y = sum([state_estimates[1,i,t]*state_estimates[5,i,t] for i in range(len(state_estimates[1,:,t]))])
+        den = sum(state_estimates[5,:,t])
+        x_est.append(x/den)
+        y_est.append(y/den)
         if t % 100 == 1:
             plt.scatter(state_estimates[0,:,t], state_estimates[1,:,t], color=(0.1, 0.2 + t/780.0/1.8, 0.5, 0.2 + t/780.0/1.8))
 
@@ -148,6 +155,8 @@ def main():
     plt.axis('equal')
     GPS_N = len(gps_estimates[0])
     plt.plot(gps_estimates[0], gps_estimates[1], c='darkblue', label='GPS data')
+    plt.plot(x_est, y_est, c='red', label='estimated path')
+    plt.legend()
     
 
     #plt.scatter(z_t_log[0][:GPS_N], z_t_log[1][:GPS_N], s=0.5, c='forestgreen', label='measurement (Lidar)')
