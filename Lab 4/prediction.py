@@ -8,6 +8,22 @@ Y_VAR = 0.25
 THETA_VAR = np.pi
 NUM_PARTICLES = 100
 MU = np.zeros(NUM_PARTICLES)
+KIDNAP_THRESHOLD = 0.0001
+NUM_STATES = 6
+INIT_RANGE = 4
+
+def init_particles(x_orig, y_orig, is_init_known):
+    state_est_t_prev = np.empty((NUM_STATES, NUM_PARTICLES))
+    state_est_t_prev[0] = INIT_RANGE * np.random.random(NUM_PARTICLES) - INIT_RANGE / 2 + x_orig
+    state_est_t_prev[1] = INIT_RANGE * np.random.random(NUM_PARTICLES) - INIT_RANGE / 2 + y_orig
+    if is_init_known:
+        state_est_t_prev[0] = x_orig * np.ones(NUM_PARTICLES)
+        state_est_t_prev[0] = y_orig * np.ones(NUM_PARTICLES)
+    state_est_t_prev[2] = np.zeros(NUM_PARTICLES)
+    state_est_t_prev[3] = np.zeros(NUM_PARTICLES)
+    state_est_t_prev[4] = 2 * np.pi * np.random.random(NUM_PARTICLES) - np.pi
+    state_est_t_prev[5] = np.ones(NUM_PARTICLES)
+    return state_est_t_prev
 
 def propogate_state(x_t_prev, u_t_noiseless):
     """Propagate/predict the state based on chosen motion model
@@ -64,6 +80,10 @@ def prediction_step(x_t_prev, u_t, z_t):
     xytheta_indices = np.array([0,1,4])
     weight_n = prob_z_given_x_t.pdf(x_bar_t[xytheta_indices].T)
     x_bar_t = np.array([x_noisy, y_noisy, vx_n, vy_n, theta_n, weight_n])
+
+    # Kidnapped case
+    if np.sum(weight_n) < KIDNAP_THRESHOLD:
+        x_bar_t = init_particles(z_x, z_y, is_init_known=False)
     """STUDENT CODE END"""
 
     return x_bar_t

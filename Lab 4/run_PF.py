@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shelve
 from utils import *
-from prediction import prediction_step, NUM_PARTICLES
+from prediction import prediction_step, init_particles, NUM_STATES, NUM_PARTICLES
 from resample import resample_step
 from RMS import find_RMS_error
 import progressbar
@@ -22,21 +22,26 @@ def moving_average(x, window = 10):
     return np.convolve(x, 1.0 * np.ones(window) / window, 'full')
 
 
-def main():
+def main(filename, isInitKnown, isKidnapped):
     """Run a PF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
 
     # filename="./shelve.out"
     # my_shelf = shelve.open(filename, "n") # 'n' for new
 
     filepath = "../../lab3csv/"
-    # filename = "2020_2_26__17_21_59_filtered"
-    filename = "2020_2_26__16_59_7_filtered"
     data, is_filtered = load_data(filepath + filename)
 
     # Save filtered data so don't have to process unfiltered data everytime
     if not is_filtered:
         data = filter_data(data)
         save_data(data, filepath+filename+"_filtered.csv")
+    
+    # Kidnap robot: stop at timestep 50, restart logging at timestep 350
+    if isKidnapped:
+        STOP_TIME = 50
+        RESTART_TIME = 350
+        for key in data:
+            data[key] = data[key][:STOP_TIME] + data[key][RESTART_TIME:]
 
     # Load data into variables
     x_lidar = data["X"]
@@ -68,15 +73,13 @@ def main():
     omega = dTheta / DT
 
     # Initialize particles
-    NUM_STATES = 6
+    
     np.random.seed(1423)
-    state_est_t_prev = np.empty((NUM_STATES, NUM_PARTICLES))
-    state_est_t_prev[0] = 4 * np.random.random(NUM_PARTICLES) - 2
-    state_est_t_prev[1] = 4 * np.random.random(NUM_PARTICLES) - 2
-    state_est_t_prev[2] = np.zeros(NUM_PARTICLES)
-    state_est_t_prev[3] = np.zeros(NUM_PARTICLES)
-    state_est_t_prev[4] = 2 * np.pi * np.random.random(NUM_PARTICLES) - np.pi
-    state_est_t_prev[5] = np.ones(NUM_PARTICLES)
+    state_est_t_prev = init_particles(
+        x_orig=0,
+        y_orig=0,
+        is_init_known=isInitKnown
+    )
 
     # initalize logs
     state_estimates = np.zeros((NUM_STATES, NUM_PARTICLES, len(time_stamps)))
@@ -179,4 +182,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    FILEONE = "2020_2_26__17_21_59_filtered"
+    FILETWO = "2020_2_26__16_59_7_filtered"
+    main(
+        filename=FILEONE,
+        isInitKnown=False,
+        isKidnapped=True
+    )
