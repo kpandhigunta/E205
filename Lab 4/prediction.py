@@ -2,15 +2,7 @@ import numpy as np
 from utils import *
 from scipy.stats import multivariate_normal
 
-STD = 1
-X_VAR = 0.25
-Y_VAR = 0.25
-THETA_VAR = np.pi
-NUM_PARTICLES = 100
-MU = np.zeros(NUM_PARTICLES)
-KIDNAP_THRESHOLD = 0.0001
-NUM_STATES = 6
-INIT_RANGE = 4
+from globals import STD, X_VAR, Y_VAR, THETA_VAR, NUM_PARTICLES, MU, KIDNAP_THRESHOLD, NUM_STATES, INIT_RANGE
 
 def init_particles(x_orig, y_orig, is_init_known):
     state_est_t_prev = np.empty((NUM_STATES, NUM_PARTICLES))

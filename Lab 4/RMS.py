@@ -22,7 +22,7 @@ def find_RMS_error(estimated_x, estimated_y):
             dist = math.dist([estimated_x[i], estimated_y[i]], [0, left])
             dist_all.append(dist)
         distances.append(min(dist_all))
-    plt.figure()
+    # plt.figure()
     plt.plot(np.linspace(0, 70, len(distances)), distances)
     plt.xlabel('time (s)')
     plt.ylabel('distance between estimated and expected paths (m)')

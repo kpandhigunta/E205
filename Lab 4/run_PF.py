@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shelve
 from utils import *
-from prediction import prediction_step, init_particles, NUM_STATES, NUM_PARTICLES
+from globals import NUM_STATES, NUM_PARTICLES, SEED
+from prediction import prediction_step, init_particles
 from resample import resample_step
 from RMS import find_RMS_error
 import progressbar
@@ -25,8 +26,8 @@ def moving_average(x, window = 10):
 def main(filename, isInitKnown, isKidnapped):
     """Run a PF on logged data from IMU and LiDAR moving in a box formation around a landmark"""
 
-    # filename="./shelve.out"
-    # my_shelf = shelve.open(filename, "n") # 'n' for new
+    shelvename="./shelve.out"
+    my_shelf = shelve.open(shelvename) # 'n' for new
 
     filepath = "../../lab3csv/"
     data, is_filtered = load_data(filepath + filename)
@@ -74,7 +75,7 @@ def main(filename, isInitKnown, isKidnapped):
 
     # Initialize particles
     
-    np.random.seed(1423)
+    np.random.seed(SEED)
     state_est_t_prev = init_particles(
         x_orig=0,
         y_orig=0,
@@ -124,20 +125,8 @@ def main(filename, isInitKnown, isKidnapped):
                                          lon_origin=lon_origin)
         gps_estimates[:, t] = np.array([x_gps, y_gps])
         lidar_pos[:,t] = np.array([z_x, z_y])
-        
 
 
-
-
-    # for key in dir():
-    #     try:
-    #         my_shelf[key] = eval(key)
-    #     except Exception:
-    #         #
-    #         # __builtins__, my_shelf, and imported modules can not be shelved.
-    #         #
-    #         print('ERROR shelving: {0}'.format(key))
-    # my_shelf.close()
 
 
     """STUDENT CODE START"""
@@ -152,7 +141,15 @@ def main(filename, isInitKnown, isKidnapped):
         if t % 100 == 1:
             plt.scatter(state_estimates[0,:,t], state_estimates[1,:,t], color=(0.1, 0.2 + t/780.0/1.8, 0.5, 0.2 + t/780.0/1.8))
 
-    
+    key = str((filename, isInitKnown, isKidnapped))
+    try:
+        my_shelf[key] = (x_est, y_est)
+    except Exception:
+        #
+        # __builtins__, my_shelf, and imported modules can not be shelved.
+        #
+        print('ERROR shelving: {0}'.format(key))
+    my_shelf.close()
 
     plt.axis('equal')
     GPS_N = len(gps_estimates[0])
@@ -170,6 +167,7 @@ def main(filename, isInitKnown, isKidnapped):
     plt.xlabel('x position (m)')
     plt.ylabel('y position (m)')
 
+    plt.figure()
     print('approximate RMS:', find_RMS_error(x_est, y_est))
     plt.xlabel('time [s]')
     plt.ylabel('error [m]')
@@ -180,12 +178,33 @@ def main(filename, isInitKnown, isKidnapped):
     """STUDENT CODE END"""
     return 0
 
+def performance(filename):
+    shelvename = "./shelve.out"
+    keyKnown = str((filename, True, False))
+    keyUnknown = str((filename, False, False))
+    with shelve.open(shelvename) as db:
+        x_known, y_known = db[keyKnown]
+        x_unknown, y_unknown = db[keyUnknown]
+        find_RMS_error(x_known, y_known)
+        find_RMS_error(x_unknown, y_unknown)
+        plt.legend(bbox_to_anchor=(1, 0.5), loc="center left")
+        plt.show()
 
 if __name__ == "__main__":
     FILEONE = "2020_2_26__17_21_59_filtered"
     FILETWO = "2020_2_26__16_59_7_filtered"
-    main(
-        filename=FILEONE,
-        isInitKnown=False,
-        isKidnapped=True
-    )
+
+    def runAll():
+        main(filename=FILEONE, isInitKnown=True, isKidnapped=False)
+        main(filename=FILEONE, isInitKnown=False, isKidnapped=False)
+        main(filename=FILETWO, isInitKnown=True, isKidnapped=False)
+        main(filename=FILETWO, isInitKnown=False, isKidnapped=False)
+    
+    # runAll()
+
+    # main(
+    #     filename=FILETWO,
+    #     isInitKnown=True,
+    #     isKidnapped=False
+    # )
+    performance(FILEONE)

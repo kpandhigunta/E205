@@ -1,0 +1,12 @@
+import numpy as np
+
+SEED = 1423
+STD = 1
+X_VAR = 0.25
+Y_VAR = 0.25
+THETA_VAR = np.pi
+NUM_PARTICLES = 100
+MU = np.zeros(NUM_PARTICLES)
+KIDNAP_THRESHOLD = 0.0001
+NUM_STATES = 6
+INIT_RANGE = 4
