@@ -1,2 +1,5 @@
 # Virtual Environment
 .venv/
+
+# mac specific stuff
+.DS_STORE
