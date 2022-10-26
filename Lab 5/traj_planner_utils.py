@@ -41,8 +41,24 @@ def construct_dubins_traj(traj_point_0, traj_point_1, ignore_time: bool = False)
   """
   
   """STUDENT CODE START"""
-  traj = []
-  traj_distance = 0
+  TURN_RADIUS = 1
+  DISTANCE_STEP_SIZE = 0.1
+  t0, x0, y0, th0 = traj_point_0
+  t1, x1, y1, th1 = traj_point_1
+  pose0 = [x0, y0, th0]
+  pose1 = [x1, y1, th1]
+
+
+  path = dubins.shortest_path(pose0, pose1, TURN_RADIUS)
+  configurations, traj_distance = path.sample_many(DISTANCE_STEP_SIZE)
+
+  num_poses = len(configurations)
+  traj = list(configurations)
+  if not ignore_time:
+    for i in range(num_poses):
+      time = i * (t1 - t0) / num_poses
+      traj[i] = [time] + list(traj[i])
+  
   """STUDENT CODE END"""
 
   return traj, traj_distance
