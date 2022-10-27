@@ -31,7 +31,18 @@ class TrajectoryTracker():
           desired_state (list of floats: The desired state to track - Time, X, Y, Theta (s, m, m, rad).
     """
     """STUDENT CODE START"""
-
+    desired_state = self.traj[self.current_point_to_track]
+    delta_x = desired_state[1] - current_state[1]
+    delta_y = desired_state[2] - current_state[2]
+    rho = math.sqrt((delta_x)**2+(delta_y)**2)
+    # if we're close enough to the next point
+    if rho < 0.1:
+      # start tracking the point after the next
+      self.current_point_to_track += 1
+      # in case we already reached the end
+      if desired_state == self.end_point:
+        self.traj_tracked = True;
+        return self.end_point
     """STUDENT CODE END"""
     return self.traj[self.current_point_to_track]
 
@@ -72,6 +83,40 @@ class PointTracker():
     # left wheel velocity
     action = [0.0, 0.0]
     """STUDENT CODE START"""
+    delta_x = desired_state[1] - current_state[1]
+    delta_y =desired_state[2] - current_state[2]
+    # print(delta_x, delta_y)
+    rho = math.sqrt((delta_x)**2+(delta_y)**2)
+    alpha = wrap_to_pi(-1*current_state[3] + math.atan2(delta_y, delta_x))
+    
+    sign = 1
+    BACKWARDS = abs(alpha) > math.pi / 2
+    if (BACKWARDS):
+      sign = -1
+    theta_des = desired_state[3]
+    beta = wrap_to_pi(-1*current_state[3] - alpha + sign * theta_des)
 
+    # prioritize k_rho and k_alpha when far 
+    if rho < 0.25:
+      k_rho = 1 # greater than 0 for stability
+      k_beta = -1 # less than 0 for stability
+      k_alpha = 2 # greater than k_rho for stability
+    else:
+      k_rho = 15 # greater than 0 for stability
+      k_beta = -20 # less than 0 for stability
+      k_alpha = 20 # greater than k_rho for stability
+    v = k_rho*rho
+    w = k_alpha*alpha + k_beta*beta
+
+    # Assume r = 1 and L = 1 so omega_1 = r * phidot / (2L) = phidot / 2
+    right_wheel = (1/2)*w + (1/2)*v
+    left_wheel = (1/2)*w - (1/2)*v
+    action = [right_wheel, left_wheel]
+    # print('alpha', alpha)
+    # print('current state', current_state)
+    # print('desired', desired_state)
+    # print('backwards', BACKWARDS)
+    # print('v, w', v, w)
+    # print('action', right_wheel, left_wheel)
     """STUDENT CODE END"""
     return action

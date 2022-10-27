@@ -36,7 +36,7 @@ class TrajectoryTracker():
     delta_x = desired_state[1] - current_state[1]
     delta_y = desired_state[2] - current_state[2]
     rho = math.sqrt((delta_x)**2+(delta_y)**2)
-    if rho < 0.001:
+    if rho < 0.1:
       self.traj_tracked = True;
     """STUDENT CODE END"""
     return self.traj[self.current_point_to_track]
@@ -108,12 +108,5 @@ class PointTracker():
     right_wheel = (1/2)*w + (1/2)*v
     left_wheel = (1/2)*w - (1/2)*v
     action = [right_wheel, left_wheel]
-    # print('alpha', alpha)
-    # print('current state', current_state)
-    # print('desired', desired_state)
-    # print('backwards', BACKWARDS)
-    # print('v, w', v, w)
-    # print('action', right_wheel, left_wheel)
-
     """STUDENT CODE END"""
     return action
