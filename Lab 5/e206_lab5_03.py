@@ -21,7 +21,6 @@ def main():
         full_traj.extend(pts[0])
         start = waypoint
     desired_traj = full_traj
-    print(desired_traj)
 
     # Create the trajectory and tracking controller
     controller = PointTracker()
