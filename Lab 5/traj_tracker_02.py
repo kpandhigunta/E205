@@ -94,13 +94,13 @@ class PointTracker():
 
     # prioritize k_rho and k_alpha when far 
     if rho < 5:
-      k_rho = 1 # greater than 0 for stability
-      k_beta = -1 # less than 0 for stability
-      k_alpha = 2 # greater than k_rho for stability
+      k_rho = 5 # greater than 0 for stability
+      k_beta = -5 # less than 0 for stability
+      k_alpha = 10 # greater than k_rho for stability
     else:
-      k_rho = 15 # greater than 0 for stability
-      k_beta = -20 # less than 0 for stability
-      k_alpha = 20 # greater than k_rho for stability
+      k_rho = 30 # greater than 0 for stability
+      k_beta = -40 # less than 0 for stability
+      k_alpha = 40 # greater than k_rho for stability
     v = k_rho*rho
     w = k_alpha*alpha + k_beta*beta
 

@@ -56,7 +56,7 @@ def construct_dubins_traj(traj_point_0, traj_point_1, ignore_time: bool = False)
   traj = list(configurations)
   if not ignore_time:
     for i in range(num_poses):
-      time = i * (t1 - t0) / num_poses
+      time = (i * (t1 - t0) / num_poses) + t0
       traj[i] = [time] + list(traj[i])
   
   """STUDENT CODE END"""

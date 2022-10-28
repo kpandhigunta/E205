@@ -36,12 +36,12 @@ class TrajectoryTracker():
     delta_y = desired_state[2] - current_state[2]
     rho = math.sqrt((delta_x)**2+(delta_y)**2)
     # if we're close enough to the next point
-    if rho < 0.1:
+    if current_state[0] > desired_state[0]:
       # start tracking the point after the next
       self.current_point_to_track += 1
       # in case we already reached the end
       if desired_state == self.end_point:
-        self.traj_tracked = True;
+        self.traj_tracked = True
         return self.end_point
     """STUDENT CODE END"""
     return self.traj[self.current_point_to_track]
@@ -98,13 +98,13 @@ class PointTracker():
 
     # prioritize k_rho and k_alpha when far 
     if rho < 0.25:
-      k_rho = 1 # greater than 0 for stability
-      k_beta = -1 # less than 0 for stability
-      k_alpha = 2 # greater than k_rho for stability
-    else:
-      k_rho = 15 # greater than 0 for stability
-      k_beta = -20 # less than 0 for stability
+      k_rho = 10 # greater than 0 for stability
+      k_beta = -10 # less than 0 for stability
       k_alpha = 20 # greater than k_rho for stability
+    else:
+      k_rho = 50 # greater than 0 for stability
+      k_beta = -50 # less than 0 for stability
+      k_alpha = 60 # greater than k_rho for stability
     v = k_rho*rho
     w = k_alpha*alpha + k_beta*beta
 
