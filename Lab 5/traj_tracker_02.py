@@ -37,7 +37,7 @@ class TrajectoryTracker():
     delta_y = desired_state[2] - current_state[2]
     rho = math.sqrt((delta_x)**2+(delta_y)**2)
     if rho < 0.1:
-      self.traj_tracked = True;
+      self.traj_tracked = True
     """STUDENT CODE END"""
     return self.traj[self.current_point_to_track]
 
